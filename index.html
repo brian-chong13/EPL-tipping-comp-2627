@@ -1119,7 +1119,7 @@
           <span class="bonus-line">🤝 <b>Underdog Draw</b> +1, a severe underdog draws and you called it</span>
           <span class="bonus-line">💯 <b>Perfect Gameweek</b> +5 (all results) / +10 (all exact)</span>
           <span class="bonus-line">★ <b>Banker</b>, doubles one nominated pick's points, 8 uses per season</span>
-          <span class="bonus-line">Predictions lock 19:00 SGT/KL every Saturday for that whole gameweek.</span>
+          <span class="bonus-line">Predictions lock 19:00 SG/KL every Saturday for that whole gameweek (Gameweek 1 is the exception - each match locks 30 min before its own kick-off instead).</span>
         </div>
       </div>
       <div class="gw-picker" id="gwPicker"></div>
@@ -1131,9 +1131,9 @@
     <div class="page" id="page-schedule">
       <div class="card" style="padding:14px 16px; margin-bottom:16px;">
         <div class="tz-row">
-          <div class="tz-badge"><span>SGT/KL</span>Singapore / Kuala Lumpur</div>
+          <div class="tz-badge"><span>SG/KL</span>Singapore / Kuala Lumpur</div>
           <div class="tz-badge"><span>UK</span>UK local</div>
-          <div class="tz-badge"><span>AET</span>Australian Eastern</div>
+          <div class="tz-badge"><span>SYD</span>Sydney</div>
         </div>
       </div>
       <div class="gw-picker" id="schedGwPicker"></div>
@@ -1340,7 +1340,7 @@ function utcToZones(utcStr) {
 }
 function fmtDeadline(ms) {
   if (!isFinite(ms)) return 'TBC';
-  return new Date(ms).toLocaleString('en-GB', { timeZone:'Asia/Singapore', weekday:'short', day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }) + ' SGT';
+  return new Date(ms).toLocaleString('en-GB', { timeZone:'Asia/Singapore', weekday:'short', day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }) + ' SG/KL';
 }
 // SGT (UTC+8, no DST) datetime-local helpers for the admin kick-off editor —
 // admin thinks and enters in Singapore/KL time; we do the UTC conversion.
@@ -1869,7 +1869,7 @@ function renderLeaderboard() {
 
   const banner = document.getElementById('lbTestBanner');
   banner.innerHTML = (GAMEWEEKS[1] && !isTestReset(1))
-    ? `<div class="test-banner">🧪 <strong>Gameweek 1 is a test run.</strong> These standings include it for now. Everything resets to zero before Gameweek 2's deadline (Sat 29 Aug, 18:00 SGT/KL).</div>`
+    ? `<div class="test-banner">🧪 <strong>Gameweek 1 is a test run.</strong> These standings include it for now. Everything resets to zero before Gameweek 2's deadline (Sat 29 Aug, 18:00 SG/KL).</div>`
     : (GAMEWEEKS[1] ? `<div class="test-banner">🧪 Gameweek 1 was a test run. Its points no longer count. The real competition runs from Gameweek 2.</div>` : '');
 
   const body = document.getElementById('leaderboardBody');
@@ -1943,7 +1943,9 @@ function renderMatchCard(m, pred, result, showPredInput) {
   const dog = (m.inComp && !postponed) ? underdogInfo(m) : null;
   const dogBadge = dog ? `<span class="match-badge badge-underdog">⚡ Underdog: ${escapeHtml(dog)}</span>` : '';
 
-  const vsContent = result ? `${result.home} - ${result.away}` : (pred ? `${pred.home}-${pred.away}` : 'v');
+  // While postponed, don't show a stored result even if one exists from before it was marked
+  // postponed - the badge/text already say it doesn't count, the score shouldn't contradict that.
+  const vsContent = (result && !postponed) ? `${result.home} - ${result.away}` : (pred ? `${pred.home}-${pred.away}` : 'v');
   const db = getDB();
   const isBanker = !!(db.bankerPick && db.bankerPick[currentUser.name] && db.bankerPick[currentUser.name][m.gw] === m.id);
 
@@ -1997,7 +1999,7 @@ function renderMatchCard(m, pred, result, showPredInput) {
       <div class="match-teams">
         <span class="team-badge" style="background:${homeClub.color||'#555'}">${homeClub.code||''}</span>
         <span class="team-name">${escapeHtml(m.home)}</span>
-        <div class="vs-box ${result?'final':''}">${vsContent}</div>
+        <div class="vs-box ${result && !postponed?'final':''}">${vsContent}</div>
         <span class="team-name right">${escapeHtml(m.away)}</span>
         <span class="team-badge" style="background:${awayClub.color||'#555'}">${awayClub.code||''}</span>
       </div>
@@ -2007,9 +2009,9 @@ function renderMatchCard(m, pred, result, showPredInput) {
       ${dogBadge}
     </div>
     <div class="tz-stack">
-      <span class="tz-line"><b>SGT</b> ${tz.sgt}</span>
+      <span class="tz-line"><b>SG/KL</b> ${tz.sgt}</span>
       <span class="tz-line"><b>UK</b> ${tz.uk}</span>
-      <span class="tz-line"><b>EST</b> ${tz.aet}</span>
+      <span class="tz-line"><b>SYD</b> ${tz.aet}</span>
     </div>
     ${gwTest && m.inComp && !postponed && !locked ? `<div style="font-size:11px;color:var(--text3);margin-top:2px;">Locks 30 min before kick-off: <span class="countdown" data-deadline="${matchDeadlineMs(m)}">${fmtCountdown(matchDeadlineMs(m)-Date.now())}</span></div>` : ''}
     ${predSection}
@@ -2087,7 +2089,7 @@ function renderSchedule() {
 // safeMutate write pattern. Any player can post; a message can be deleted by
 // whoever posted it, or by an admin.
 function fmtChatTime(ts) {
-  return new Date(ts).toLocaleString('en-GB', { timeZone:'Asia/Singapore', day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }) + ' SGT';
+  return new Date(ts).toLocaleString('en-GB', { timeZone:'Asia/Singapore', day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }) + ' SG/KL';
 }
 function renderChat() {
   const db = getDB();
@@ -2201,7 +2203,7 @@ function buildAdminCard(m) {
       ${postponed?'<span class="match-badge badge-postponed">Postponed</span>':''}
       ${anchors.length?`<span style="font-size:11px;color:var(--text3);">Anchor: ${anchors.join(', ')}</span>`:''}
     </div>
-    <div class="tz-stack"><span class="tz-line"><b>SGT</b> ${tz.sgt} &nbsp;&nbsp; <b>UK</b> ${tz.uk}</span></div>
+    <div class="tz-stack"><span class="tz-line"><b>SG/KL</b> ${tz.sgt} &nbsp;&nbsp; <b>UK</b> ${tz.uk}</span></div>
     <div class="admin-score-row">
       ${actionHtml}
       ${m.inComp && !postponed && gwOpen ? `<button class="btn-postpone" onclick="togglePostponed('${m.id}', true)">Mark postponed</button>` : ''}
@@ -2270,7 +2272,7 @@ function renderKickoffEditor() {
         <div style="font-size:11px;color:var(--text3);">${m.reason==='friday' && m.inComp===false ?'Currently Friday-excluded':''}</div>
       </div>
       <input class="form-input" style="width:auto;" type="datetime-local" id="ko_${m.id}" value="${toDatetimeLocalSGT(m.utc)}">
-      <button class="btn-confirm" onclick="saveKickoff('${m.id}')">Save (SGT)</button>
+      <button class="btn-confirm" onclick="saveKickoff('${m.id}')">Save (SG/KL)</button>
     </div>`).join('');
   document.getElementById('kickoffEditorList').innerHTML = html || '<div style="color:var(--text3);font-size:13px;">No matches.</div>';
 }
