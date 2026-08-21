@@ -210,7 +210,7 @@
   /* LEADERBOARD */
   .leaderboard-header {
     display: grid;
-    grid-template-columns: 36px 1fr 50px 50px 60px;
+    grid-template-columns: 36px 1fr 50px 50px 60px 60px;
     gap: 6px;
     padding: 8px 12px;
     font-size: 11px;
@@ -221,7 +221,7 @@
   }
   .leaderboard-row {
     display: grid;
-    grid-template-columns: 36px 1fr 50px 50px 60px;
+    grid-template-columns: 36px 1fr 50px 50px 60px 60px;
     gap: 6px;
     align-items: center;
     padding: 12px;
@@ -905,7 +905,7 @@
   /* MOBILE */
   @media (max-width: 480px) {
     .stats-strip { grid-template-columns: repeat(2, 1fr); }
-    .leaderboard-header, .leaderboard-row { grid-template-columns: 30px 1fr 40px 40px 50px; }
+    .leaderboard-header, .leaderboard-row { grid-template-columns: 30px 1fr 40px 40px 50px 46px; }
     .team-name { font-size: 12px; }
     .stat-box-val { font-size: 22px; }
     .auth-box, .setup-box { padding: 24px 18px; }
@@ -1102,7 +1102,7 @@
       <div class="card">
         <div class="card-title">STANDINGS<button class="refresh-btn" id="refreshBtn" onclick="refreshLeaderboard()">Refresh</button></div>
         <div class="leaderboard-header">
-          <div>#</div><div>Player</div><div style="text-align:center">Exact</div><div style="text-align:center">Bonus</div><div style="text-align:center">Pts</div>
+          <div>#</div><div>Player</div><div style="text-align:center">Exact</div><div style="text-align:center">Bonus</div><div style="text-align:center">Pts</div><div style="text-align:center">GW Wins</div>
         </div>
         <div id="leaderboardBody"></div>
       </div>
@@ -1564,7 +1564,7 @@ function calcPlayerStats(playerKey) {
     const res = db.results && db.results[m.id];
     if (!res) return;
     if (isTestReset(m.gw)) return;
-    if (!perGw[m.gw]) perGw[m.gw] = { total:0, correct:0, exactCount:0 };
+    if (!perGw[m.gw]) perGw[m.gw] = { total:0, correct:0, exactCount:0, pts:0 };
     perGw[m.gw].total++;
     const pred = preds[m.id];
     const calc = pred ? calcMatchPts(em, pred, res) : null;
@@ -1576,15 +1576,45 @@ function calcPlayerStats(playerKey) {
     if (calc.exact) { exact++; perGw[m.gw].exactCount++; }
     if (calc.correctResult) perGw[m.gw].correct++;
     pts += matchTotal;
+    perGw[m.gw].pts += matchTotal;
     bonusPts += calc.bonusTotal * (isBanker?2:1);
   });
   Object.entries(perGw).forEach(([gw, s]) => {
     if (isTestReset(Number(gw))) return;
     if (s.total === 0) return;
-    if (s.exactCount === s.total) { pts += 10; bonusPts += 10; }
-    else if (s.correct === s.total) { pts += 5; bonusPts += 5; }
+    if (s.exactCount === s.total) { pts += 10; bonusPts += 10; s.pts += 10; }
+    else if (s.correct === s.total) { pts += 5; bonusPts += 5; s.pts += 5; }
   });
-  return { exact, pts, bonusPts, predicted };
+  return { exact, pts, bonusPts, predicted, perGw };
+}
+
+// ─── GAMEWEEK WINNERS ────────────────────────────────────────────────────────
+// A gameweek only has a winner once at least one result is in for it, and only
+// if the best score is above zero - otherwise a week where everyone gets every
+// match wrong would "award" the win to the whole group. Ties share the win, no
+// tiebreaker. Test gameweeks (GW1) never count, same as everywhere else in the
+// app that already excludes GW1 from counting long-term. This recalculates live
+// from calcPlayerStats' perGw breakdown, so the leader can shift while a
+// gameweek is still being played and settles once all its matches are done -
+// same as every other number on this leaderboard.
+function calcGwWinners(statsByName) {
+  const wins = {};
+  Object.keys(statsByName).forEach(name => wins[name] = 0);
+  const gws = Object.keys(GAMEWEEKS).map(Number).filter(gw => !isTestGw(gw));
+  gws.forEach(gw => {
+    let best = 0, bestPlayers = [], anyResult = false;
+    Object.entries(statsByName).forEach(([name, stats]) => {
+      const gwStat = stats.perGw[gw];
+      if (!gwStat || gwStat.total === 0) return;
+      anyResult = true;
+      const gwPts = gwStat.pts;
+      if (gwPts > best) { best = gwPts; bestPlayers = [name]; }
+      else if (gwPts === best) { bestPlayers.push(name); }
+    });
+    if (!anyResult || best <= 0) return;
+    bestPlayers.forEach(name => wins[name]++);
+  });
+  return wins;
 }
 
 // ─── JSONBIN ─────────────────────────────────────────────────────────────────
@@ -1861,7 +1891,10 @@ function renderLeaderboard() {
   document.getElementById('statGw').textContent = 'GW' + defaultGw();
   document.getElementById('statCompleted').textContent = Object.keys(db.results||{}).length;
 
-  const rows = players.map(([key, p]) => ({ name: p.name, ...calcPlayerStats(p.name) }))
+  const statsByName = {};
+  players.forEach(([key, p]) => { statsByName[p.name] = calcPlayerStats(p.name); });
+  const gwWins = calcGwWinners(statsByName);
+  const rows = players.map(([key, p]) => ({ name: p.name, ...statsByName[p.name], gwWins: gwWins[p.name] || 0 }))
     .sort((a,b) => b.pts - a.pts || b.exact - a.exact || a.name.localeCompare(b.name));
 
   const me = rows.find(r => r.name === currentUser.name);
@@ -1882,6 +1915,7 @@ function renderLeaderboard() {
       <div class="stat-cell">${r.exact}</div>
       <div class="stat-cell">${r.bonusPts}</div>
       <div class="pts-cell">${r.pts}</div>
+      <div class="stat-cell">${r.gwWins}</div>
     </div>`;
   }).join('') || '<div style="color:var(--text3);font-size:13px;padding:20px 0;">No players yet.</div>';
 }
