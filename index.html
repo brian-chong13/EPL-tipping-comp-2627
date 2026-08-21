@@ -946,6 +946,39 @@
   .pick-name { color: var(--text2); flex-shrink: 0; min-width: 90px; }
   .pick-score { font-family: 'DM Mono', monospace; color: var(--text); font-weight: 500; }
 
+  /* CHAT BOARD */
+  .chat-compose { display: flex; gap: 10px; margin-bottom: 16px; align-items: flex-start; }
+  .chat-textarea {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    padding: 10px 12px;
+    outline: none;
+    resize: vertical;
+    min-height: 44px;
+    transition: border-color 0.2s;
+  }
+  .chat-textarea:focus { border-color: var(--accent); }
+  .chat-msg {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    margin-bottom: 8px;
+  }
+  .chat-msg-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; flex-wrap: wrap; }
+  .chat-msg-author { font-size: 13px; font-weight: 700; color: var(--text); }
+  .chat-msg-author.me { color: var(--accent); }
+  .chat-msg-time { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; }
+  .chat-msg-delete { margin-left: auto; font-size: 11px; color: var(--text3); background: none; border: none; cursor: pointer; text-decoration: underline; font-family: 'DM Sans', sans-serif; padding: 0; }
+  .chat-msg-delete:hover { color: var(--accent2); }
+  .chat-msg-text { font-size: 14px; color: var(--text2); line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+  .chat-empty { color: var(--text3); font-size: 13px; padding: 20px 0; text-align: center; }
+
   /* SCORING INFO */
   .scoring-info { font-size: 12px; color: var(--text2); line-height: 1.7; }
   .scoring-info b { color: var(--accent3); }
@@ -1052,6 +1085,7 @@
       <div class="nav-tab active" onclick="showPage('leaderboard')">Leaderboard</div>
       <div class="nav-tab" onclick="showPage('predictions')">My Predictions</div>
       <div class="nav-tab" onclick="showPage('schedule')">Schedule</div>
+      <div class="nav-tab" onclick="showPage('chat')">Chat</div>
       <div class="nav-tab" id="adminNavTab" style="display:none" onclick="showPage('admin')">&#9733; Admin</div>
     </div>
   </nav>
@@ -1104,6 +1138,18 @@
       </div>
       <div class="gw-picker" id="schedGwPicker"></div>
       <div id="scheduleList"></div>
+    </div>
+
+    <!-- CHAT PAGE -->
+    <div class="page" id="page-chat">
+      <div class="card">
+        <div class="card-title">CHAT<button class="refresh-btn" id="chatRefreshBtn" onclick="refreshChat()">Refresh</button></div>
+        <div class="chat-compose">
+          <textarea class="chat-textarea" id="chatInput" placeholder="Say something to the group..." maxlength="500"></textarea>
+          <button class="btn-save" onclick="postChat()">Post</button>
+        </div>
+        <div id="chatList"></div>
+      </div>
     </div>
 
     <!-- ADMIN PAGE -->
@@ -1199,10 +1245,10 @@ const CLUBS = {
   'Tottenham Hotspur': { code:'TOT', color:'#132257' },
 };
 
-// The 7 "anchor" clubs — a shortlisted fixture for each of these is required
-// every gameweek wherever one exists (see the exclusion/wildcard rules below).
-const ANCHOR_CLUBS = ['Manchester United','Arsenal','Newcastle United','Liverpool','Chelsea','Manchester City','Tottenham Hotspur'];
-const ANCHOR_TARGET = 7; // target matches per gameweek shortlist
+// The anchor clubs — a shortlisted fixture for each of these is required every
+// gameweek wherever one exists (see suggestedShortlist/gwEffectiveIds below).
+const ANCHOR_CLUBS = ['Manchester United','Tottenham Hotspur','Arsenal','Newcastle United'];
+const ANCHOR_TARGET = 5; // target matches per gameweek shortlist - also the hard minimum once a gameweek opens
 
 // Proxy pecking order used for upset detection until the live 2026-27 table
 // has enough matches behind it (see LIVE_TABLE_MIN_MATCHES). Built from the
@@ -1225,59 +1271,64 @@ const LIVE_TABLE_MIN_MATCHES = 4;  // avg matches played per club before trustin
 // total is zeroed out automatically once resetAtUTC passes (1 hour before
 // Gameweek 2's own deadline) — see isTestReset(). No admin action needed.
 const GAMEWEEKS = {
-  1: { deadlineUTC: '2026-08-22T11:00:00Z', isTest: true, resetAtUTC: '2026-08-29T10:00:00Z' },
+  // No deadlineUTC for GW1 on purpose - it's the test gameweek, so there's no
+  // single round-wide deadline. Each match locks 30 minutes before its own
+  // kick-off instead, giving players more time overall (see matchDeadlineMs).
+  1: { isTest: true, resetAtUTC: '2026-08-29T10:00:00Z' },
   2: { deadlineUTC: '2026-08-29T11:00:00Z' },
   3: { deadlineUTC: '2026-09-05T11:00:00Z' },
 };
 
 // ─── MATCHES ────────────────────────────────────────────────────────────────
 // Real fixtures for gameweeks 1-3 (premierleague.com / Sky Sports, confirmed
-// 21 Aug 2026). tag: 'anchor' (one of the 7 required clubs) | 'wildcard'
-// (admin's free pick to fill a slot freed by a derby or a Friday exclusion) |
-// null (not currently in the shortlist). reason:'friday' marks a match
-// excluded from selection because it kicks off Friday night UK time.
+// 21 Aug 2026). reason:'friday' marks a match excluded from selection because
+// it kicks off Friday night UK time - never eligible for the shortlist.
+// Which matches are actually in a gameweek's shortlist is NOT baked in here -
+// see the SHORTLIST section below (suggestedShortlist / gwEffectiveIds).
 // More gameweeks get appended here over the season (manually, and via the
 // scheduled kick-off-time refresh checks) — see project memory for the plan.
 const MATCHES = (() => {
   const raw = [
-    // gw, home, away, utc, tag, inComp, reason
-    [1,'Arsenal','Coventry City','2026-08-21T19:00:00Z', null, false, 'friday'],
-    [1,'Hull City','Manchester United','2026-08-22T11:30:00Z','anchor', true, null],
-    [1,'Everton','Crystal Palace','2026-08-22T14:00:00Z', null, false, null],
-    [1,'Ipswich Town','Sunderland','2026-08-22T14:00:00Z', null, false, null],
-    [1,'Nottingham Forest','Leeds United','2026-08-22T14:00:00Z','wildcard', true, null],
-    [1,'Brentford','Tottenham Hotspur','2026-08-22T16:30:00Z','anchor', true, null],
-    [1,'Brighton & Hove Albion','Aston Villa','2026-08-23T13:00:00Z','wildcard', true, null],
-    [1,'Manchester City','AFC Bournemouth','2026-08-23T13:00:00Z','anchor', true, null],
-    [1,'Newcastle United','Liverpool','2026-08-23T15:30:00Z','anchor', true, null],
-    [1,'Fulham','Chelsea','2026-08-24T19:00:00Z','anchor', true, null],
+    // gw, home, away, utc, reason - raw fixture data only. Which ones are actually
+    // "in the shortlist" is no longer baked in here - see suggestedShortlist() /
+    // gwEffectiveIds() below, which compute it live from ANCHOR_CLUBS + admin overrides.
+    [1,'Arsenal','Coventry City','2026-08-21T19:00:00Z','friday'],
+    [1,'Hull City','Manchester United','2026-08-22T11:30:00Z',null],
+    [1,'Everton','Crystal Palace','2026-08-22T14:00:00Z',null],
+    [1,'Ipswich Town','Sunderland','2026-08-22T14:00:00Z',null],
+    [1,'Nottingham Forest','Leeds United','2026-08-22T14:00:00Z',null],
+    [1,'Brentford','Tottenham Hotspur','2026-08-22T16:30:00Z',null],
+    [1,'Brighton & Hove Albion','Aston Villa','2026-08-23T13:00:00Z',null],
+    [1,'Manchester City','AFC Bournemouth','2026-08-23T13:00:00Z',null],
+    [1,'Newcastle United','Liverpool','2026-08-23T15:30:00Z',null],
+    [1,'Fulham','Chelsea','2026-08-24T19:00:00Z',null],
     // GW2 — real start of the competition
-    [2,'Crystal Palace','Manchester City','2026-08-28T19:00:00Z', null, false, 'friday'],
-    [2,'Liverpool','Nottingham Forest','2026-08-29T11:30:00Z','anchor', true, null],
-    [2,'AFC Bournemouth','Everton','2026-08-29T14:00:00Z','wildcard', true, null],
-    [2,'Coventry City','Hull City','2026-08-29T14:00:00Z', null, false, null],
-    [2,'Tottenham Hotspur','Newcastle United','2026-08-29T16:30:00Z','anchor', true, null],
-    [2,'Chelsea','Brighton & Hove Albion','2026-08-30T13:00:00Z','anchor', true, null],
-    [2,'Leeds United','Brentford','2026-08-30T13:00:00Z','wildcard', true, null],
-    [2,'Sunderland','Fulham','2026-08-30T13:00:00Z', null, false, null],
-    [2,'Manchester United','Ipswich Town','2026-08-30T15:30:00Z','anchor', true, null],
-    [2,'Aston Villa','Arsenal','2026-08-31T19:00:00Z','anchor', true, null],
+    [2,'Crystal Palace','Manchester City','2026-08-28T19:00:00Z','friday'],
+    [2,'Liverpool','Nottingham Forest','2026-08-29T11:30:00Z',null],
+    [2,'AFC Bournemouth','Everton','2026-08-29T14:00:00Z',null],
+    [2,'Coventry City','Hull City','2026-08-29T14:00:00Z',null],
+    [2,'Tottenham Hotspur','Newcastle United','2026-08-29T16:30:00Z',null],
+    [2,'Chelsea','Brighton & Hove Albion','2026-08-30T13:00:00Z',null],
+    [2,'Leeds United','Brentford','2026-08-30T13:00:00Z',null],
+    [2,'Sunderland','Fulham','2026-08-30T13:00:00Z',null],
+    [2,'Manchester United','Ipswich Town','2026-08-30T15:30:00Z',null],
+    [2,'Aston Villa','Arsenal','2026-08-31T19:00:00Z',null],
     // GW3
-    [3,'Ipswich Town','Liverpool','2026-09-04T19:00:00Z', null, false, 'friday'],
-    [3,'Newcastle United','AFC Bournemouth','2026-09-05T11:30:00Z','anchor', true, null],
-    [3,'Brentford','Sunderland','2026-09-05T14:00:00Z', null, false, null],
-    [3,'Brighton & Hove Albion','Leeds United','2026-09-05T14:00:00Z','wildcard', true, null],
-    [3,'Fulham','Crystal Palace','2026-09-05T14:00:00Z','wildcard', true, null],
-    [3,'Manchester City','Coventry City','2026-09-05T14:00:00Z','anchor', true, null],
-    [3,'Nottingham Forest','Tottenham Hotspur','2026-09-05T14:00:00Z','anchor', true, null],
-    [3,'Hull City','Aston Villa','2026-09-05T16:30:00Z', null, false, null],
-    [3,'Everton','Manchester United','2026-09-06T13:00:00Z','anchor', true, null],
-    [3,'Arsenal','Chelsea','2026-09-06T15:30:00Z','anchor', true, null],
+    [3,'Ipswich Town','Liverpool','2026-09-04T19:00:00Z','friday'],
+    [3,'Newcastle United','AFC Bournemouth','2026-09-05T11:30:00Z',null],
+    [3,'Brentford','Sunderland','2026-09-05T14:00:00Z',null],
+    [3,'Brighton & Hove Albion','Leeds United','2026-09-05T14:00:00Z',null],
+    [3,'Fulham','Crystal Palace','2026-09-05T14:00:00Z',null],
+    [3,'Manchester City','Coventry City','2026-09-05T14:00:00Z',null],
+    [3,'Nottingham Forest','Tottenham Hotspur','2026-09-05T14:00:00Z',null],
+    [3,'Hull City','Aston Villa','2026-09-05T16:30:00Z',null],
+    [3,'Everton','Manchester United','2026-09-06T13:00:00Z',null],
+    [3,'Arsenal','Chelsea','2026-09-06T15:30:00Z',null],
   ];
   const counters = {};
-  return raw.map(([gw,home,away,utc,tag,inComp,reason]) => {
+  return raw.map(([gw,home,away,utc,reason]) => {
     counters[gw] = (counters[gw]||0) + 1;
-    return { id:`g${gw}m${String(counters[gw]).padStart(2,'0')}`, gw, home, away, utc, tag, inComp, reason: reason||null };
+    return { id:`g${gw}m${String(counters[gw]).padStart(2,'0')}`, gw, home, away, utc, reason: reason||null };
   });
 })();
 
@@ -1306,36 +1357,107 @@ function sgtLocalToUtcIso(val) {
   return new Date(Date.UTC(y, mo-1, d, h-8, mi)).toISOString();
 }
 
-// ─── OVERRIDES (admin-editable, live in JSONBin — no rebuild needed) ────────
-// Kick-off time corrections, wildcard swaps, and postponements all layer on
-// top of the hardcoded defaults above via db.overrides[matchId].
+// ─── SHORTLIST (admin-editable, live in JSONBin — no rebuild needed) ────────
+// A gameweek's shortlist is no longer baked into the fixture data. Instead:
+//  - suggestedShortlist(gw): pure, deterministic "if admin touches nothing"
+//    default - one fixture per anchor club (derbies covering 2 at once), then
+//    earliest-kickoff fixtures to fill up to ANCHOR_TARGET. Friday-UK fixtures
+//    are never eligible.
+//  - db.overrides[matchId].inComp: admin's explicit on/off toggle for one
+//    match, layered on top of the suggestion (same override mechanism as
+//    kick-off time and postponed already use).
+//  - gwEffectiveIds(gw): what's ACTUALLY in the shortlist. Before the
+//    gameweek opens this is just admin's current working state (can be
+//    short of target while they're still picking). Once it opens it's
+//    topped back up to ANCHOR_TARGET automatically if admin left it short,
+//    so a gameweek never goes live with fewer than ANCHOR_TARGET matches.
+function suggestedShortlist(gw) {
+  const fixtures = MATCHES.filter(m => m.gw === gw && m.reason !== 'friday')
+    .slice().sort((a,b) => new Date(a.utc) - new Date(b.utc));
+  const picks = [];
+  const covered = new Set();
+  ANCHOR_CLUBS.forEach(club => {
+    if (covered.has(club)) return;
+    const fixture = fixtures.find(m => !picks.includes(m) && (m.home === club || m.away === club));
+    if (fixture) { picks.push(fixture); covered.add(fixture.home); covered.add(fixture.away); }
+  });
+  fixtures.forEach(m => { if (picks.length < ANCHOR_TARGET && !picks.includes(m)) picks.push(m); });
+  return picks.slice(0, ANCHOR_TARGET).map(m => m.id);
+}
+function _selectedIds(gw) {
+  // admin's raw working state for this gameweek, pre-topup - internal only,
+  // does not call effectiveMatch (avoids recursion through gwEffectiveIds).
+  const db = getDB();
+  return MATCHES.filter(m => m.gw === gw).filter(m => {
+    const o = (db.overrides && db.overrides[m.id]) || {};
+    return o.inComp !== undefined ? o.inComp : (m.reason !== 'friday' && suggestedShortlist(gw).includes(m.id));
+  }).map(m => m.id);
+}
+function gwEffectiveIds(gw) {
+  const selected = _selectedIds(gw);
+  if (!isGwOpen(gw) || selected.length >= ANCHOR_TARGET) return selected;
+  const result = selected.slice();
+  const fallback = MATCHES.filter(m => m.gw === gw && m.reason !== 'friday')
+    .slice().sort((a,b) => new Date(a.utc) - new Date(b.utc)).map(m => m.id);
+  suggestedShortlist(gw).concat(fallback).forEach(id => {
+    if (result.length < ANCHOR_TARGET && !result.includes(id)) result.push(id);
+  });
+  return result;
+}
 function effectiveMatch(m) {
   const db = getDB();
   const o = (db.overrides && db.overrides[m.id]) || {};
-  return { ...m, ...o };
+  return { ...m, ...o, inComp: gwEffectiveIds(m.gw).includes(m.id) };
 }
 function isPostponed(em) { return em.postponed === true; }
 
-// ─── GAMEWEEK DEADLINES / LOCK ───────────────────────────────────────────────
+// ─── GAMEWEEK DEADLINES / LOCK / OPEN ────────────────────────────────────────
 function isTestGw(gw) { return !!(GAMEWEEKS[gw] && GAMEWEEKS[gw].isTest); }
 function isTestReset(gw) {
   const g = GAMEWEEKS[gw];
   if (!g || !g.isTest) return false;
   return Date.now() >= new Date(g.resetAtUTC).getTime();
 }
+// matchDeadlineMs(m): when THIS match's own prediction/banker lock hits. Test
+// gameweeks (GW1) have no single round-wide deadline - each match locks 30
+// minutes before its own kick-off. Every other gameweek uses the round-wide
+// gwDeadlineMs for all its matches, same as before.
+function matchDeadlineMs(m) {
+  return isTestGw(m.gw) ? new Date(m.utc).getTime() - 30*60*1000 : gwDeadlineMs(m.gw);
+}
 function gwDeadlineMs(gw) {
+  const gwMatches = MATCHES.filter(m => m.gw === gw).map(effectiveMatch).filter(m => m.inComp);
+  if (isTestGw(gw)) {
+    // "The gameweek is locked" for a test gameweek means every one of its
+    // matches has individually locked - i.e. the LATEST per-match deadline.
+    if (!gwMatches.length) return Infinity;
+    return Math.max(...gwMatches.map(matchDeadlineMs));
+  }
   const g = GAMEWEEKS[gw];
   if (g && g.deadlineUTC) return new Date(g.deadlineUTC).getTime();
-  const gwMatches = MATCHES.filter(m => m.gw === gw).map(effectiveMatch).filter(m => m.inComp);
   if (!gwMatches.length) return Infinity;
   const earliest = Math.min(...gwMatches.map(m => new Date(m.utc).getTime()));
   return earliest - 60*60*1000; // fallback: 1hr before earliest in-comp match
 }
 function isGwLocked(gw) { return Date.now() >= gwDeadlineMs(gw); }
-function isLocked(m) { return isGwLocked(m.gw); }
+function isLocked(m) { return Date.now() >= matchDeadlineMs(m); }
 function allGws() { return [...new Set(MATCHES.map(m=>m.gw))].sort((a,b)=>a-b); }
-function defaultGw() {
+// A gameweek "opens" - becomes visible/predictable to players, and its
+// shortlist freezes - the instant the PREVIOUS gameweek's deadline passes.
+// The first known gameweek has no predecessor, so it's open from the start.
+function isGwOpen(gw) {
   const gws = allGws();
+  const idx = gws.indexOf(gw);
+  if (idx <= 0) return true;
+  return isGwLocked(gws[idx-1]);
+}
+function openGws() { return allGws().filter(isGwOpen); }
+function defaultAdminGw() {
+  const notYetOpen = allGws().find(gw => !isGwOpen(gw));
+  return notYetOpen !== undefined ? notYetOpen : defaultGw();
+}
+function defaultGw() {
+  const gws = openGws();
   const open = gws.find(gw => !isGwLocked(gw));
   return open !== undefined ? open : gws[gws.length-1];
 }
@@ -1543,6 +1665,7 @@ function safeMutate(mutator) {
     if (!merged.settings) merged.settings = {};
     if (!merged.overrides) merged.overrides = {};
     if (!merged.bankerPick) merged.bankerPick = {};
+    if (!merged.chat) merged.chat = [];
     mutator(merged);
     await saveDB(merged);
     _db = merged;
@@ -1566,7 +1689,7 @@ function hashPin(pin) {
   for (let i=0;i<pin.length;i++) { h = ((h<<5)-h) + pin.charCodeAt(i); h |= 0; }
   return 'p' + Math.abs(h).toString(36) + pin.length;
 }
-function escapeHtml(str) { return String(str).replace(/'/g,"&#39;").replace(/"/g,"&quot;"); }
+function escapeHtml(str) { return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/'/g,"&#39;").replace(/"/g,"&quot;"); }
 
 function switchAuthTab(tab) {
   document.getElementById('tabLogin').classList.toggle('active', tab==='login');
@@ -1640,6 +1763,7 @@ async function runSetup() {
     if (!merged.settings) merged.settings = {};
     if (!merged.overrides) merged.overrides = {};
     if (!merged.bankerPick) merged.bankerPick = {};
+    if (!merged.chat) merged.chat = [];
     await saveDB(merged);
     _db = merged; _writeCache(merged);
     setSession({ name: adminName, key: adminKey });
@@ -1689,12 +1813,13 @@ function showPage(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  const idx = ['leaderboard','predictions','schedule','admin'].indexOf(page);
+  const idx = ['leaderboard','predictions','schedule','chat','admin'].indexOf(page);
   const tabs = document.querySelectorAll('.nav-tab');
   if (tabs[idx]) tabs[idx].classList.add('active');
   if (page === 'leaderboard') renderLeaderboard();
   if (page === 'predictions') renderPredictions();
   if (page === 'schedule') renderSchedule();
+  if (page === 'chat') renderChat();
   if (page === 'admin') renderAdmin();
 }
 async function refreshLeaderboard() {
@@ -1707,8 +1832,8 @@ async function refreshLeaderboard() {
 }
 
 // ─── GAMEWEEK PICKER (shared) ─────────────────────────────────────────────────
-function renderGwPicker(elId, selected, onClick) {
-  const gws = allGws();
+function renderGwPicker(elId, selected, onClick, gwList) {
+  const gws = gwList || allGws();
   const el = document.getElementById(elId);
   el.innerHTML = gws.map(gw => `<div class="gw-pill ${gw===selected?'active':''} ${isTestGw(gw)?'test':''}" data-gw="${gw}">GW${gw}${isTestGw(gw)?'<span class="gw-sub">test</span>':''}</div>`).join('');
   el.querySelectorAll('.gw-pill').forEach(pill => { pill.onclick = () => onClick(Number(pill.getAttribute('data-gw'))); });
@@ -1764,8 +1889,8 @@ function renderLeaderboard() {
 // ─── PREDICTIONS ─────────────────────────────────────────────────────────────
 let selectedGw = null;
 function renderPredictions() {
-  if (selectedGw === null || !allGws().includes(selectedGw)) selectedGw = defaultGw();
-  renderGwPicker('gwPicker', selectedGw, (gw) => { selectedGw = gw; renderPredictions(); });
+  if (selectedGw === null || !openGws().includes(selectedGw)) selectedGw = defaultGw();
+  renderGwPicker('gwPicker', selectedGw, (gw) => { selectedGw = gw; renderPredictions(); }, openGws());
 
   const banner = document.getElementById('predTestBanner');
   if (isTestGw(selectedGw) && !isTestReset(selectedGw)) {
@@ -1774,13 +1899,25 @@ function renderPredictions() {
     banner.innerHTML = `<div class="test-banner">🧪 Gameweek 1 was the test run. Its points no longer count. The real competition started at Gameweek 2.</div>`;
   } else { banner.innerHTML = ''; }
 
-  const dl = gwDeadlineMs(selectedGw);
-  const locked = isGwLocked(selectedGw);
+  const isTest = isTestGw(selectedGw);
   const remaining = bankersRemaining(currentUser.name);
+  let deadlineHtml;
+  if (isTest) {
+    const testMatches = MATCHES.filter(m => m.gw === selectedGw).map(effectiveMatch).filter(m => m.inComp);
+    const upcoming = testMatches.map(matchDeadlineMs).filter(ms => ms > Date.now()).sort((a,b) => a-b);
+    deadlineHtml = upcoming.length
+      ? `<div class="deadline-label">Next match locks <b>${fmtDeadline(upcoming[0])}</b></div><span class="countdown" data-deadline="${upcoming[0]}">${fmtCountdown(upcoming[0]-Date.now())}</span>`
+      : `<div class="deadline-label">All matches locked</div>`;
+    deadlineHtml += `<div style="font-size:11px;color:var(--text3);width:100%;">Test gameweek: each match locks 30 min before its own kick-off, not all at once</div>`;
+  } else {
+    const dl = gwDeadlineMs(selectedGw);
+    const locked = isGwLocked(selectedGw);
+    deadlineHtml = `<div class="deadline-label">${locked ? 'Locked since' : 'Deadline'} <b>${fmtDeadline(dl)}</b></div>
+      ${!locked ? `<span class="countdown" data-deadline="${dl}">${fmtCountdown(dl-Date.now())}</span>` : ''}`;
+  }
   document.getElementById('deadlineStrip').innerHTML = `
-    <div class="deadline-label">${locked ? 'Locked since' : 'Deadline'} <b>${fmtDeadline(dl)}</b></div>
-    ${!locked ? `<span class="countdown" data-deadline="${dl}">${fmtCountdown(dl-Date.now())}</span>` : ''}
-    <div class="banker-toggle-wrap"><span class="banker-count">${isTestGw(selectedGw) ? "test gameweek, free banker, doesn't use an allowance" : remaining + ' of 8 bankers left this season'}</span></div>
+    ${deadlineHtml}
+    <div class="banker-toggle-wrap"><span class="banker-count">${isTest ? "test gameweek, free banker, doesn't use an allowance" : remaining + ' of 8 bankers left this season'}</span></div>
   `;
 
   const db = getDB();
@@ -1794,7 +1931,7 @@ function renderPredictions() {
 function renderMatchCard(m, pred, result, showPredInput) {
   const postponed = isPostponed(m);
   const excludedFriday = m.reason === 'friday' && !m.inComp;
-  const locked = isGwLocked(m.gw);
+  const locked = isLocked(m);
   const gwTest = isTestGw(m.gw);
 
   let statusClass = 'open', badgeText = 'Open', badgeClass = 'badge-open';
@@ -1874,6 +2011,7 @@ function renderMatchCard(m, pred, result, showPredInput) {
       <span class="tz-line"><b>UK</b> ${tz.uk}</span>
       <span class="tz-line"><b>EST</b> ${tz.aet}</span>
     </div>
+    ${gwTest && m.inComp && !postponed && !locked ? `<div style="font-size:11px;color:var(--text3);margin-top:2px;">Locks 30 min before kick-off: <span class="countdown" data-deadline="${matchDeadlineMs(m)}">${fmtCountdown(matchDeadlineMs(m)-Date.now())}</span></div>` : ''}
     ${predSection}
     ${picksSection}
   </div>`;
@@ -1917,6 +2055,8 @@ async function toggleBanker(matchId, gw) {
   const db = getDB();
   const current = db.bankerPick && db.bankerPick[playerKey] && db.bankerPick[playerKey][gw];
   const turningOff = current === matchId;
+  const match = MATCHES.find(m => m.id === matchId);
+  if (!turningOff && match && isLocked(match)) { showToast('This match is locked.', 'error'); return; }
   if (!turningOff && !isTestGw(gw) && bankersRemaining(playerKey) <= 0) { showToast('No bankers left this season', 'error'); return; }
   try {
     await safeMutate(db => {
@@ -1932,13 +2072,72 @@ async function toggleBanker(matchId, gw) {
 // ─── SCHEDULE ─────────────────────────────────────────────────────────────────
 let schedSelectedGw = null;
 function renderSchedule() {
-  if (schedSelectedGw === null || !allGws().includes(schedSelectedGw)) schedSelectedGw = defaultGw();
-  renderGwPicker('schedGwPicker', schedSelectedGw, (gw) => { schedSelectedGw = gw; renderSchedule(); });
+  if (schedSelectedGw === null || !openGws().includes(schedSelectedGw)) schedSelectedGw = defaultGw();
+  renderGwPicker('schedGwPicker', schedSelectedGw, (gw) => { schedSelectedGw = gw; renderSchedule(); }, openGws());
   const db = getDB();
   const matches = MATCHES.filter(m => m.gw === schedSelectedGw).map(effectiveMatch).filter(m => m.inComp).sort((a,b)=>new Date(a.utc)-new Date(b.utc));
   let html = '';
   matches.forEach(m => { html += renderMatchCard(m, null, db.results && db.results[m.id], false); });
   document.getElementById('scheduleList').innerHTML = html || '<div style="color:var(--text3);font-size:13px;padding:20px 0;">No matches loaded for this gameweek yet.</div>';
+}
+
+// ─── CHAT ─────────────────────────────────────────────────────────────────────
+// Simple forum-board style: flat list, newest first, no threading. Shares the
+// same JSONBin doc as everything else (db.chat, a plain array), same
+// safeMutate write pattern. Any player can post; a message can be deleted by
+// whoever posted it, or by an admin.
+function fmtChatTime(ts) {
+  return new Date(ts).toLocaleString('en-GB', { timeZone:'Asia/Singapore', day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }) + ' SGT';
+}
+function renderChat() {
+  const db = getDB();
+  const msgs = (db.chat || []).slice().sort((a,b) => b.ts - a.ts);
+  document.getElementById('chatList').innerHTML = msgs.length ? msgs.map(msg => {
+    const mine = msg.author === currentUser.name;
+    const canDelete = mine || isAdmin();
+    return `<div class="chat-msg" id="chatmsg_${msg.id}">
+      <div class="chat-msg-head">
+        <span class="chat-msg-author ${mine?'me':''}">${escapeHtml(msg.author)}</span>
+        <span class="chat-msg-time">${fmtChatTime(msg.ts)}</span>
+        ${canDelete ? `<button class="chat-msg-delete" onclick="deleteChatMsg('${msg.id}')">Delete</button>` : ''}
+      </div>
+      <div class="chat-msg-text">${escapeHtml(msg.text)}</div>
+    </div>`;
+  }).join('') : '<div class="chat-empty">No messages yet. Say hello.</div>';
+}
+async function postChat() {
+  const el = document.getElementById('chatInput');
+  const text = el.value.trim();
+  if (!text) { showToast('Write something first', 'error'); return; }
+  if (text.length > 500) { showToast('Keep it under 500 characters', 'error'); return; }
+  const msg = { id: 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2,7), author: currentUser.name, text, ts: Date.now() };
+  try {
+    await safeMutate(db => { db.chat.push(msg); });
+    el.value = '';
+    renderChat();
+  } catch(e) { showToast('Failed to post', 'error'); }
+}
+function deleteChatMsg(id) {
+  const db = getDB();
+  const msg = (db.chat || []).find(m => m.id === id);
+  if (!msg) return;
+  if (msg.author !== currentUser.name && !isAdmin()) { showToast('Not allowed', 'error'); return; }
+  openModal('Delete message', "Delete this message? This can't be undone.", async () => {
+    try {
+      await safeMutate(db => { db.chat = (db.chat || []).filter(m => m.id !== id); });
+      showToast('Message deleted', 'success');
+      renderChat();
+    } catch(e) { showToast('Failed to delete', 'error'); }
+    closeModal();
+  });
+}
+async function refreshChat() {
+  const btn = document.getElementById('chatRefreshBtn');
+  btn.classList.add('spinning'); btn.textContent = '...';
+  _clearCache();
+  await loadDB(true);
+  renderChat();
+  btn.classList.remove('spinning'); btn.textContent = 'Refresh';
 }
 
 // ─── ADMIN ────────────────────────────────────────────────────────────────────
@@ -1951,14 +2150,18 @@ function renderAdmin() {
 let adminSelectedGw = null;
 function renderAdminMatches() {
   if (!isAdmin()) return;
-  if (adminSelectedGw === null || !allGws().includes(adminSelectedGw)) adminSelectedGw = defaultGw();
+  if (adminSelectedGw === null || !allGws().includes(adminSelectedGw)) adminSelectedGw = defaultAdminGw();
   renderGwPicker('adminGwPicker', adminSelectedGw, (gw) => { adminSelectedGw = gw; renderAdminMatches(); });
   const search = (document.getElementById('adminMatchSearch').value||'').toLowerCase();
   const all = MATCHES.filter(m => m.gw === adminSelectedGw).map(effectiveMatch);
   const inCompCount = all.filter(m => m.inComp).length;
+  const gwOpen = isGwOpen(adminSelectedGw);
   const matches = all.filter(m => !search || m.home.toLowerCase().includes(search) || m.away.toLowerCase().includes(search))
     .sort((a,b)=>new Date(a.utc)-new Date(b.utc));
-  let html = `<div style="font-size:12px;color:var(--text3);margin-bottom:10px;">${inCompCount} of ${ANCHOR_TARGET} target matches in this gameweek's shortlist.</div>`;
+  const statusLine = gwOpen
+    ? `${inCompCount} of ${ANCHOR_TARGET} in this gameweek's shortlist. Locked, this gameweek is already open to players.`
+    : `${inCompCount} of ${ANCHOR_TARGET} selected. Editable until this gameweek opens (the previous gameweek's deadline)${inCompCount < ANCHOR_TARGET ? ` - it'll auto-fill up to ${ANCHOR_TARGET} at that point if you leave it short` : ''}.`;
+  let html = `<div style="font-size:12px;color:var(--text3);margin-bottom:10px;">${statusLine}</div>`;
   matches.forEach(m => { html += buildAdminCard(m); });
   document.getElementById('adminMatchList').innerHTML = html;
 }
@@ -1969,6 +2172,20 @@ function buildAdminCard(m) {
   const tz = utcToZones(m.utc);
   const anchors = [m.home, m.away].filter(c => ANCHOR_CLUBS.includes(c));
   const homeClub = CLUBS[m.home]||{}, awayClub = CLUBS[m.away]||{};
+  const gwOpen = isGwOpen(m.gw);
+  const isFriday = m.reason === 'friday';
+
+  let actionHtml;
+  if (isFriday) {
+    actionHtml = `<span style="font-size:11px;color:var(--text3);">Friday UK kick-off, never selectable</span>`;
+  } else if (gwOpen) {
+    actionHtml = `<span style="font-size:11px;color:var(--text3);">${m.inComp ? 'In the shortlist' : 'Not selected'}, shortlist locked now this gameweek is open</span>`;
+  } else {
+    const currentCount = MATCHES.filter(x => x.gw === m.gw).map(effectiveMatch).filter(x => x.inComp).length;
+    const disallowOn = !m.inComp && currentCount >= ANCHOR_TARGET;
+    actionHtml = `<button class="btn-wildcard ${m.inComp?'active':''}" ${disallowOn?'disabled':''} onclick="setInComp('${m.id}', ${!m.inComp})">${m.inComp ? 'Remove from shortlist' : (disallowOn ? `${ANCHOR_TARGET} already selected` : '+ Add to shortlist')}</button>`;
+  }
+
   return `<div class="match-card" id="admincard_${m.id}">
     <div class="match-top">
       <div class="match-teams">
@@ -1980,17 +2197,17 @@ function buildAdminCard(m) {
       </div>
     </div>
     <div class="match-meta">
-      <span class="match-badge ${m.inComp?'badge-open':'badge-excluded'}">${m.inComp ? (m.tag==='anchor'?'Anchor, in comp':m.tag==='wildcard'?'Wildcard, in comp':'In comp') : (m.reason==='friday'?'Friday, excluded':'Not selected')}</span>
+      <span class="match-badge ${m.inComp?'badge-open':'badge-excluded'}">${m.inComp ? 'In comp' : (isFriday?'Friday, excluded':'Not selected')}</span>
       ${postponed?'<span class="match-badge badge-postponed">Postponed</span>':''}
       ${anchors.length?`<span style="font-size:11px;color:var(--text3);">Anchor: ${anchors.join(', ')}</span>`:''}
     </div>
     <div class="tz-stack"><span class="tz-line"><b>SGT</b> ${tz.sgt} &nbsp;&nbsp; <b>UK</b> ${tz.uk}</span></div>
     <div class="admin-score-row">
-      ${!m.inComp ? `<button class="btn-wildcard" onclick="setWildcard('${m.id}', true)">+ Add as wildcard</button>` : (m.tag==='wildcard' ? `<button class="btn-wildcard" onclick="setWildcard('${m.id}', false)">Remove wildcard</button>` : '<span style="font-size:11px;color:var(--text3);">Required anchor fixture</span>')}
-      ${m.inComp && !postponed ? `<button class="btn-postpone" onclick="togglePostponed('${m.id}', true)">Mark postponed</button>` : ''}
+      ${actionHtml}
+      ${m.inComp && !postponed && gwOpen ? `<button class="btn-postpone" onclick="togglePostponed('${m.id}', true)">Mark postponed</button>` : ''}
       ${postponed ? `<button class="btn-recalc" onclick="togglePostponed('${m.id}', false)">Unmark postponed</button>` : ''}
     </div>
-    ${m.inComp && !postponed ? `<div class="admin-score-row">
+    ${m.inComp && !postponed && gwOpen ? `<div class="admin-score-row">
       <span class="admin-badge-label">RESULT</span>
       <div class="score-input-group">
         <input class="score-input" type="number" min="0" max="99" value="${res?res.home:''}" id="admin_h_${m.id}">
@@ -2001,16 +2218,25 @@ function buildAdminCard(m) {
     </div>` : ''}
   </div>`;
 }
-async function setWildcard(matchId, on) {
+async function setInComp(matchId, on) {
+  const match = MATCHES.find(m => m.id === matchId);
+  if (!match) return;
+  if (isGwOpen(match.gw)) { showToast('Shortlist is locked, this gameweek is already open', 'error'); return; }
   try {
     await safeMutate(db => {
+      const selectedIds = MATCHES.filter(x => x.gw === match.gw).filter(x => {
+        const o = db.overrides[x.id] || {};
+        return o.inComp !== undefined ? o.inComp : (x.reason !== 'friday' && suggestedShortlist(match.gw).includes(x.id));
+      }).map(x => x.id);
+      if (on && !selectedIds.includes(matchId) && selectedIds.length >= ANCHOR_TARGET) throw new Error('CAP_REACHED');
       if (!db.overrides[matchId]) db.overrides[matchId] = {};
-      if (on) { db.overrides[matchId].inComp = true; db.overrides[matchId].tag = 'wildcard'; }
-      else { db.overrides[matchId].inComp = false; db.overrides[matchId].tag = null; }
+      db.overrides[matchId].inComp = on;
     });
-    showToast(on?'Added as wildcard':'Removed from shortlist', 'success');
+    showToast(on?'Added to shortlist':'Removed from shortlist', 'success');
     renderAdminMatches();
-  } catch(e) { showToast('Failed to update', 'error'); }
+  } catch(e) {
+    showToast(e && e.message==='CAP_REACHED' ? `Already ${ANCHOR_TARGET} selected for this gameweek` : 'Failed to update', 'error');
+  }
 }
 async function togglePostponed(matchId, on) {
   try {
@@ -2056,13 +2282,20 @@ async function saveKickoff(matchId) {
   const newDate = new Date(iso);
   if (isNaN(newDate.getTime())) { showToast('Invalid date/time', 'error'); return; }
   const ukDay = newDate.toLocaleString('en-GB', { timeZone:'Europe/London', weekday:'short' });
+  const match = MATCHES.find(m => m.id === matchId);
+  const gwOpen = match && isGwOpen(match.gw);
+  const willAutoExclude = ukDay === 'Fri' && !gwOpen;
   try {
     await safeMutate(db => {
       if (!db.overrides[matchId]) db.overrides[matchId] = {};
       db.overrides[matchId].utc = iso;
-      if (ukDay === 'Fri') { db.overrides[matchId].inComp = false; db.overrides[matchId].tag = null; }
+      if (willAutoExclude) db.overrides[matchId].inComp = false;
     });
-    showToast(ukDay==='Fri' ? 'Saved. Now a Friday UK kick-off, removed from shortlist' : 'Kick-off time updated', 'success');
+    showToast(
+      willAutoExclude ? 'Saved. Now a Friday UK kick-off, removed from shortlist'
+      : (ukDay === 'Fri' ? 'Saved. Now a Friday UK kick-off - this gameweek is already open, use Mark postponed instead if it needs pulling' : 'Kick-off time updated'),
+      'success'
+    );
     renderKickoffEditor(); renderAdminMatches();
   } catch(e) { showToast('Failed to save', 'error'); }
 }
