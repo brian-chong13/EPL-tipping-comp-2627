@@ -440,6 +440,7 @@
   .badge-wildcard { background: rgba(179,136,255,0.12); color: var(--purple); border: 1px solid rgba(179,136,255,0.3); }
   .badge-excluded { background: rgba(122,122,152,0.15); color: var(--text3); }
   .badge-postponed { background: rgba(255,61,113,0.12); color: var(--accent2); }
+  .badge-underdog { background: rgba(255,214,0,0.12); color: var(--accent3); border: 1px solid rgba(255,214,0,0.3); }
 
   /* PREDICTION INPUT */
   .pred-row {
@@ -1079,7 +1080,7 @@
       <div class="card" style="padding:14px 16px; margin-bottom:16px;">
         <div class="scoring-info">
           <b>Scoring:</b> 3 pts exact score, 1 pt correct result.
-          <span class="bonus-line">🔥 <b>Goal Fest</b> +3, exact score on a match with 5+ total goals</span>
+          <span class="bonus-line">🔥 <b>Goal Fest</b> +3, exact score on a match with 5 or more total goals</span>
           <span class="bonus-line">⚡ <b>Upset Special</b> +2 (result) / +4 (exact) when a severe underdog (10+ table places) wins outright and you called it</span>
           <span class="bonus-line">🤝 <b>Underdog Draw</b> +1, a severe underdog draws and you called it</span>
           <span class="bonus-line">💯 <b>Perfect Gameweek</b> +5 (all results) / +10 (all exact)</span>
@@ -1394,6 +1395,13 @@ function isSevereDrawUpset(match, result) {
   if (result.home !== result.away) return false;
   return Math.abs(rankOf(match.home, match.gw) - rankOf(match.away, match.gw)) >= UPSET_GAP;
 }
+// Pre-match underdog check (no result needed) - which club, if either, is enough of a
+// long shot this week that an Upset Special / Underdog Draw bonus is in play.
+function underdogInfo(match) {
+  const gap = rankOf(match.home, match.gw) - rankOf(match.away, match.gw);
+  if (Math.abs(gap) < UPSET_GAP) return null;
+  return gap > 0 ? match.home : match.away;
+}
 
 // ─── SCORING ──────────────────────────────────────────────────────────────────
 function calcMatchPts(match, pred, result) {
@@ -1592,15 +1600,19 @@ async function doRegister() {
   if (pin !== pin2) { errEl.textContent = "PINs don't match."; errEl.style.display='block'; return; }
   const key = normName(name);
   let taken = false;
+  let becameAdmin = false;
   try {
     await safeMutate(db => {
       if (db.players[key]) { taken = true; return; }
-      db.players[key] = { name, pin: hashPin(pin), isAdmin: false, joined: Date.now() };
+      // First person ever to register (empty player list) is made admin automatically -
+      // there's no separate "initialise app" step once EMBEDDED_CONFIG ships pre-filled.
+      becameAdmin = Object.keys(db.players).length === 0;
+      db.players[key] = { name, pin: hashPin(pin), isAdmin: becameAdmin, joined: Date.now() };
     });
   } catch(e) { errEl.textContent = 'Registration failed, try again.'; errEl.style.display='block'; return; }
   if (taken) { errEl.textContent = 'That name is already registered.'; errEl.style.display='block'; return; }
   setSession({ name, key });
-  currentUser = { name, key, isAdmin: false };
+  currentUser = { name, key, isAdmin: becameAdmin };
   bootAppScreen();
 }
 function doLogout() { clearSession(); currentUser = null; location.reload(); }
@@ -1773,7 +1785,7 @@ function renderPredictions() {
 
   const db = getDB();
   const myPreds = (db.predictions && db.predictions[currentUser.name]) || {};
-  const gwMatches = MATCHES.filter(m => m.gw === selectedGw).map(effectiveMatch).sort((a,b)=> new Date(a.utc)-new Date(b.utc));
+  const gwMatches = MATCHES.filter(m => m.gw === selectedGw).map(effectiveMatch).filter(m => m.inComp).sort((a,b)=> new Date(a.utc)-new Date(b.utc));
   let html = '';
   gwMatches.forEach(m => { html += renderMatchCard(m, myPreds[m.id], db.results && db.results[m.id], true); });
   document.getElementById('predictionsList').innerHTML = html || '<div style="color:var(--text3);font-size:13px;padding:20px 0;">No matches loaded for this gameweek yet.</div>';
@@ -1791,8 +1803,8 @@ function renderMatchCard(m, pred, result, showPredInput) {
   else if (result) { statusClass='final'; badgeText='Final'; badgeClass='badge-final'; }
   else if (locked) { statusClass='locked'; badgeText='Locked'; badgeClass='badge-locked'; }
 
-  const tagBadge = m.tag === 'anchor' ? '<span class="match-badge badge-anchor">Anchor</span>'
-                  : m.tag === 'wildcard' ? '<span class="match-badge badge-wildcard">Wildcard</span>' : '';
+  const dog = (m.inComp && !postponed) ? underdogInfo(m) : null;
+  const dogBadge = dog ? `<span class="match-badge badge-underdog">⚡ Underdog: ${escapeHtml(dog)}</span>` : '';
 
   const vsContent = result ? `${result.home} - ${result.away}` : (pred ? `${pred.home}-${pred.away}` : 'v');
   const db = getDB();
@@ -1855,10 +1867,12 @@ function renderMatchCard(m, pred, result, showPredInput) {
     </div>
     <div class="match-meta">
       <span class="match-badge ${badgeClass}">${badgeText}</span>
-      ${tagBadge}
+      ${dogBadge}
     </div>
     <div class="tz-stack">
-      <span class="tz-line"><b>SGT</b> ${tz.sgt} &nbsp;&nbsp; <b>UK</b> ${tz.uk}</span>
+      <span class="tz-line"><b>SGT</b> ${tz.sgt}</span>
+      <span class="tz-line"><b>UK</b> ${tz.uk}</span>
+      <span class="tz-line"><b>EST</b> ${tz.aet}</span>
     </div>
     ${predSection}
     ${picksSection}
@@ -1921,10 +1935,10 @@ function renderSchedule() {
   if (schedSelectedGw === null || !allGws().includes(schedSelectedGw)) schedSelectedGw = defaultGw();
   renderGwPicker('schedGwPicker', schedSelectedGw, (gw) => { schedSelectedGw = gw; renderSchedule(); });
   const db = getDB();
-  const matches = MATCHES.filter(m => m.gw === schedSelectedGw).map(effectiveMatch).sort((a,b)=>new Date(a.utc)-new Date(b.utc));
+  const matches = MATCHES.filter(m => m.gw === schedSelectedGw).map(effectiveMatch).filter(m => m.inComp).sort((a,b)=>new Date(a.utc)-new Date(b.utc));
   let html = '';
   matches.forEach(m => { html += renderMatchCard(m, null, db.results && db.results[m.id], false); });
-  document.getElementById('scheduleList').innerHTML = html;
+  document.getElementById('scheduleList').innerHTML = html || '<div style="color:var(--text3);font-size:13px;padding:20px 0;">No matches loaded for this gameweek yet.</div>';
 }
 
 // ─── ADMIN ────────────────────────────────────────────────────────────────────
