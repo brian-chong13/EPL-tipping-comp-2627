@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WC2026 Predictor</title>
+<title>EPL 26/27 Tipping Comp</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -14,7 +14,7 @@
     --surface2: #1c1c27;
     --surface3: #242433;
     --border: #36364d;
-    --accent: #00e5ff;
+    --accent: #00e676;
     --accent2: #ff3d71;
     --accent3: #ffd600;
     --text: #f0f0f5;
@@ -24,6 +24,7 @@
     --silver: #aab0c0;
     --bronze: #cd7f32;
     --green: #00e676;
+    --purple: #b388ff;
     --radius: 12px;
     --radius-sm: 8px;
   }
@@ -46,7 +47,7 @@
     width: 200%;
     height: 200%;
     background:
-      radial-gradient(ellipse at 20% 20%, rgba(0,229,255,0.04) 0%, transparent 50%),
+      radial-gradient(ellipse at 20% 20%, rgba(0,230,118,0.04) 0%, transparent 50%),
       radial-gradient(ellipse at 80% 80%, rgba(255,61,113,0.04) 0%, transparent 50%),
       radial-gradient(ellipse at 50% 50%, rgba(255,214,0,0.02) 0%, transparent 60%);
     pointer-events: none;
@@ -193,18 +194,24 @@
   .refresh-btn:hover { color: var(--text); border-color: var(--text2); }
   .refresh-btn.spinning { color: var(--accent); border-color: var(--accent); }
 
-  /* PAST MATCHES ARCHIVE */
-  .past-matches-archive { margin-top: 16px; border-radius: 10px; border: 1px solid var(--border); overflow: hidden; }
-  .past-matches-summary { list-style: none; display: flex; align-items: center; padding: 10px 16px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; color: var(--text3); cursor: pointer; background: var(--surface2); user-select: none; }
-  .past-matches-summary::before { content: '+ '; font-size: 14px; margin-right: 6px; }
-  .past-matches-archive[open] .past-matches-summary::before { content: '- '; }
-  .past-matches-body { padding: 0 0 8px; }
+  /* TEST RUN BANNER */
+  .test-banner {
+    background: linear-gradient(135deg, rgba(179,136,255,0.15), rgba(0,230,118,0.08));
+    border: 1px solid var(--purple);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text2);
+  }
+  .test-banner strong { color: var(--purple); }
 
   /* LEADERBOARD */
   .leaderboard-header {
     display: grid;
-    grid-template-columns: 40px 1fr 60px 60px 60px;
-    gap: 8px;
+    grid-template-columns: 36px 1fr 50px 50px 60px;
+    gap: 6px;
     padding: 8px 12px;
     font-size: 11px;
     font-weight: 600;
@@ -214,8 +221,8 @@
   }
   .leaderboard-row {
     display: grid;
-    grid-template-columns: 40px 1fr 60px 60px 60px;
-    gap: 8px;
+    grid-template-columns: 36px 1fr 50px 50px 60px;
+    gap: 6px;
     align-items: center;
     padding: 12px;
     border-radius: var(--radius-sm);
@@ -225,7 +232,7 @@
     transition: all 0.2s;
   }
   .leaderboard-row:hover { border-color: var(--border); }
-  .leaderboard-row.me { border-color: var(--accent); background: rgba(0,229,255,0.05); }
+  .leaderboard-row.me { border-color: var(--accent); background: rgba(0,230,118,0.05); }
   .leaderboard-row.rank-1 { border-color: var(--gold); background: rgba(255,214,0,0.05); }
   .leaderboard-row.rank-2 { border-color: var(--silver); background: rgba(170,176,192,0.05); }
   .leaderboard-row.rank-3 { border-color: var(--bronze); background: rgba(205,127,50,0.05); }
@@ -242,6 +249,59 @@
   .player-name small { display: block; font-size: 11px; color: var(--text3); font-weight: 400; }
   .stat-cell { text-align: center; font-family: 'DM Mono', monospace; font-size: 14px; }
   .pts-cell { font-family: 'DM Mono', monospace; font-size: 16px; font-weight: 500; color: var(--accent); text-align: center; }
+  .bonus-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+  .bonus-chip {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.3px;
+  }
+  .chip-goalfest { background: rgba(255,61,113,0.15); color: var(--accent2); }
+  .chip-upset { background: rgba(255,214,0,0.15); color: var(--accent3); }
+  .chip-draw { background: rgba(179,136,255,0.15); color: var(--purple); }
+  .chip-perfect { background: rgba(0,230,118,0.15); color: var(--accent); }
+  .chip-banker { background: rgba(0,229,255,0.15); color: #00e5ff; }
+
+  /* GAMEWEEK PICKER */
+  .gw-picker { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 14px; scrollbar-width: none; }
+  .gw-picker::-webkit-scrollbar { display: none; }
+  .gw-pill {
+    flex-shrink: 0;
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 1px;
+    font-size: 14px;
+    padding: 7px 16px;
+    border-radius: 20px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .gw-pill:hover { color: var(--text); }
+  .gw-pill.active { background: rgba(0,230,118,0.12); border-color: var(--accent); color: var(--accent); }
+  .gw-pill.test { border-color: var(--purple); }
+  .gw-pill .gw-sub { font-family: 'DM Sans',sans-serif; font-size: 9px; letter-spacing: 0; text-transform: uppercase; display: block; margin-top: -2px; opacity: 0.7; }
+
+  /* DEADLINE STRIP */
+  .deadline-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .deadline-label { font-size: 12px; color: var(--text2); }
+  .deadline-label b { color: var(--text); }
+  .banker-toggle-wrap { display: flex; align-items: center; gap: 8px; }
+  .banker-count { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; }
 
   /* MATCH LIST */
   .group-label {
@@ -271,6 +331,9 @@
   .match-card:hover { border-color: var(--surface3); }
   .match-card.open { border-color: var(--accent); }
   .match-card.locked { opacity: 0.75; }
+  .match-card.excluded { opacity: 0.5; border-style: dashed; }
+  .match-card.postponed { opacity: 0.55; border-color: var(--accent2); border-style: dashed; }
+  .match-card.is-banker { border-color: #00e5ff; box-shadow: 0 0 0 1px #00e5ff inset; }
   .match-top {
     display: flex;
     align-items: center;
@@ -295,6 +358,17 @@
     white-space: nowrap;
   }
   .team-name.right { text-align: right; }
+  .team-badge {
+    flex-shrink: 0;
+    width: 26px; height: 26px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    color: #fff;
+    text-shadow: 0 1px 1px rgba(0,0,0,0.4);
+  }
   .vs-box {
     flex-shrink: 0;
     font-family: 'DM Mono', monospace;
@@ -308,7 +382,6 @@
   }
   .vs-box.final { color: var(--accent3); background: rgba(255,214,0,0.1); font-size: 14px; font-weight: 600; }
   .vs-group { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
-  .vs-flag { font-size: 16px; line-height: 1; flex-shrink: 0; }
   .match-meta {
     display: flex;
     align-items: center;
@@ -320,7 +393,6 @@
     font-family: 'DM Mono', monospace;
     color: var(--text2);
   }
-  /* Stacked timezone block: each zone on its own line, uniform colour */
   .tz-stack {
     margin-top: 6px;
     display: flex;
@@ -339,7 +411,6 @@
     display: inline-block;
     min-width: 30px;
   }
-  /* Countdown on the next match to kick off */
   .countdown {
     font-size: 11px;
     font-family: 'DM Mono', monospace;
@@ -364,7 +435,11 @@
   .badge-open { background: rgba(0,230,118,0.15); color: var(--green); }
   .badge-locked { background: rgba(255,61,113,0.15); color: var(--accent2); }
   .badge-final { background: rgba(255,214,0,0.15); color: var(--accent3); }
-  .badge-soon { background: rgba(0,229,255,0.15); color: var(--accent); }
+  .badge-soon { background: rgba(0,229,255,0.15); color: #00e5ff; }
+  .badge-anchor { background: rgba(255,214,0,0.12); color: var(--accent3); border: 1px solid rgba(255,214,0,0.3); }
+  .badge-wildcard { background: rgba(179,136,255,0.12); color: var(--purple); border: 1px solid rgba(179,136,255,0.3); }
+  .badge-excluded { background: rgba(122,122,152,0.15); color: var(--text3); }
+  .badge-postponed { background: rgba(255,61,113,0.12); color: var(--accent2); }
 
   /* PREDICTION INPUT */
   .pred-row {
@@ -372,6 +447,7 @@
     align-items: center;
     gap: 8px;
     margin-top: 8px;
+    flex-wrap: wrap;
   }
   .pred-label { font-size: 11px; color: var(--text3); flex-shrink: 0; }
   .score-input-group {
@@ -412,7 +488,7 @@
     letter-spacing: 0.5px;
     transition: all 0.2s;
   }
-  .btn-save:hover { background: #33eaff; }
+  .btn-save:hover { background: #33ff9d; }
   .pred-saved {
     font-size: 11px;
     color: var(--green);
@@ -425,6 +501,22 @@
     margin-top: 6px;
     font-style: italic;
   }
+  .btn-banker {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text3);
+    border-radius: 20px;
+    padding: 4px 11px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+  }
+  .btn-banker:hover { border-color: #00e5ff; color: #00e5ff; }
+  .btn-banker.active { background: rgba(0,229,255,0.15); border-color: #00e5ff; color: #00e5ff; }
+  .btn-banker:disabled { opacity: 0.35; cursor: not-allowed; }
+  .btn-banker::before { content: '★ '; }
 
   /* ADMIN SCORE INPUT */
   .admin-score-row {
@@ -434,6 +526,7 @@
     margin-top: 10px;
     padding-top: 10px;
     border-top: 1px dashed var(--border);
+    flex-wrap: wrap;
   }
   .admin-badge-label {
     font-size: 10px;
@@ -471,6 +564,32 @@
     transition: all 0.2s;
   }
   .btn-recalc:hover { background: rgba(255,214,0,0.1); }
+  .btn-postpone {
+    background: none;
+    border: 1px solid var(--accent2);
+    color: var(--accent2);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+  }
+  .btn-postpone:hover { background: rgba(255,61,113,0.1); }
+  .btn-wildcard {
+    background: none;
+    border: 1px solid var(--purple);
+    color: var(--purple);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+  }
+  .btn-wildcard:hover { background: rgba(179,136,255,0.1); }
 
   /* AUTH SCREEN */
   .auth-wrap {
@@ -492,8 +611,8 @@
   }
   .auth-logo {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 36px;
-    letter-spacing: 3px;
+    font-size: 32px;
+    letter-spacing: 2px;
     color: var(--accent);
     text-align: center;
     margin-bottom: 4px;
@@ -554,7 +673,7 @@
     transition: all 0.2s;
     margin-top: 4px;
   }
-  .btn-primary:hover { background: #33eaff; }
+  .btn-primary:hover { background: #33ff9d; }
   .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
   .auth-error {
     background: rgba(255,61,113,0.1);
@@ -640,6 +759,20 @@
     transition: all 0.2s;
   }
   .btn-warning:hover { background: rgba(255,214,0,0.1); }
+  .wildcard-picker-list { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+  .wildcard-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    background: var(--surface3);
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .wildcard-option:hover { border-color: var(--purple); }
+  .wildcard-option.selected { border-color: var(--purple); background: rgba(179,136,255,0.1); }
 
   /* SPINNER */
   .spinner {
@@ -734,10 +867,10 @@
     border-radius: 16px;
     padding: 28px 24px;
     width: 100%;
-    max-width: 360px;
+    max-width: 380px;
   }
   .modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1.5px; margin-bottom: 8px; }
-  .modal-desc { font-size: 13px; color: var(--text2); margin-bottom: 20px; }
+  .modal-desc { font-size: 13px; color: var(--text2); margin-bottom: 20px; line-height: 1.5; }
   .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
   .btn-cancel {
     background: none;
@@ -771,33 +904,11 @@
   /* MOBILE */
   @media (max-width: 480px) {
     .stats-strip { grid-template-columns: repeat(2, 1fr); }
-    .leaderboard-header, .leaderboard-row { grid-template-columns: 36px 1fr 50px 50px 50px; }
+    .leaderboard-header, .leaderboard-row { grid-template-columns: 30px 1fr 40px 40px 50px; }
     .team-name { font-size: 12px; }
     .stat-box-val { font-size: 22px; }
     .auth-box, .setup-box { padding: 24px 18px; }
   }
-
-  /* PHASE FILTER */
-  .filter-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
-  .filter-btn {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    color: var(--text2);
-    border-radius: 20px;
-    padding: 5px 12px;
-    font-size: 12px;
-    cursor: pointer;
-    font-family: 'DM Sans', sans-serif;
-    transition: all 0.2s;
-    font-weight: 500;
-  }
-  .filter-btn:hover { color: var(--text); }
-  .filter-btn.active { background: rgba(0,229,255,0.1); border-color: var(--accent); color: var(--accent); }
-
-  /* DATE/GROUP SORT TOGGLE */
-  .sort-toggle { display: flex; margin-left: auto; border: 1px solid var(--border); border-radius: 20px; overflow: hidden; flex-shrink: 0; }
-  .sort-btn { font-size: 11px; padding: 4px 10px; color: var(--text2); background: transparent; cursor: pointer; font-family: 'DM Sans', sans-serif; font-weight: 500; transition: all 0.2s; }
-  .sort-btn.active { background: rgba(0,229,255,0.1); color: var(--accent); }
 
   /* PICKS REVEAL */
   .picks-hidden {
@@ -808,7 +919,6 @@
     border-top: 1px dashed var(--border);
     font-style: italic;
   }
-  .picks-hidden strong { color: var(--text2); font-style: normal; font-family: 'DM Mono', monospace; }
   .picks-details { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border); }
   .picks-summary {
     font-size: 12px;
@@ -834,13 +944,18 @@
   .pick-row.pick-me { border: 1px solid var(--accent); }
   .pick-name { color: var(--text2); flex-shrink: 0; min-width: 90px; }
   .pick-score { font-family: 'DM Mono', monospace; color: var(--text); font-weight: 500; }
+
+  /* SCORING INFO */
+  .scoring-info { font-size: 12px; color: var(--text2); line-height: 1.7; }
+  .scoring-info b { color: var(--accent3); }
+  .scoring-info .bonus-line { display: block; margin-top: 2px; }
 </style>
 </head>
 <body>
 
 <!-- LOADING -->
 <div id="loadingScreen" class="loading-screen">
-  <div class="loading-logo">WC<span>2026</span></div>
+  <div class="loading-logo">EPL<span>26/27</span></div>
   <div class="spinner"></div>
 </div>
 
@@ -879,8 +994,8 @@
 <div id="authScreen" style="display:none">
   <div class="auth-wrap">
     <div class="auth-box">
-      <div class="auth-logo">WC<span>2026</span></div>
-      <div class="auth-sub">Score Predictor</div>
+      <div class="auth-logo">EPL<span>26/27</span></div>
+      <div class="auth-sub">Tipping Comp</div>
       <div class="auth-tabs">
         <div class="auth-tab active" id="tabLogin" onclick="switchAuthTab('login')">Sign In</div>
         <div class="auth-tab" id="tabReg" onclick="switchAuthTab('register')">Register</div>
@@ -912,7 +1027,7 @@
         <button class="btn-primary" onclick="doRegister()">CREATE ACCOUNT</button>
       </div>
       <div class="auth-error" id="authError"></div>
-      <div class="auth-note">Predictions lock 1 hour before each kick-off</div>
+      <div class="auth-note">Predictions lock 19:00 Singapore/KL time each Saturday, for that gameweek's whole shortlist</div>
     </div>
   </div>
 </div>
@@ -921,7 +1036,7 @@
 <div id="appScreen" style="display:none">
   <header class="header">
     <div class="header-inner">
-      <div class="logo">WC<span>2026</span></div>
+      <div class="logo">EPL<span>26/27</span></div>
       <div class="header-right">
         <div class="user-badge" onclick="showPage('predictions')">
           <div class="user-avatar" id="headerAvatar">?</div>
@@ -942,16 +1057,17 @@
   <main>
     <!-- LEADERBOARD PAGE -->
     <div class="page active" id="page-leaderboard">
+      <div id="lbTestBanner"></div>
       <div class="stats-strip" id="statsStrip">
         <div class="stat-box"><div class="stat-box-val" id="statPlayers">0</div><div class="stat-box-label">Players</div></div>
-        <div class="stat-box"><div class="stat-box-val" id="statMatches">104</div><div class="stat-box-label">Matches</div></div>
+        <div class="stat-box"><div class="stat-box-val" id="statGw">1</div><div class="stat-box-label">Gameweek</div></div>
         <div class="stat-box"><div class="stat-box-val" id="statCompleted">0</div><div class="stat-box-label">Completed</div></div>
         <div class="stat-box"><div class="stat-box-val" id="statYourPts">0</div><div class="stat-box-label">Your Pts</div></div>
       </div>
       <div class="card">
         <div class="card-title">STANDINGS<button class="refresh-btn" id="refreshBtn" onclick="refreshLeaderboard()">Refresh</button></div>
         <div class="leaderboard-header">
-          <div>#</div><div>Player</div><div style="text-align:center">Played</div><div style="text-align:center">Exact</div><div style="text-align:center">Pts</div>
+          <div>#</div><div>Player</div><div style="text-align:center">Exact</div><div style="text-align:center">Bonus</div><div style="text-align:center">Pts</div>
         </div>
         <div id="leaderboardBody"></div>
       </div>
@@ -959,21 +1075,20 @@
 
     <!-- PREDICTIONS PAGE -->
     <div class="page" id="page-predictions">
+      <div id="predTestBanner"></div>
       <div class="card" style="padding:14px 16px; margin-bottom:16px;">
-        <div style="font-size:12px; color:var(--text2); line-height:1.6;">
-          <strong style="color:var(--accent3);">Scoring:</strong> 3 pts exact score &nbsp;|&nbsp; 1 pt correct result &nbsp;|&nbsp; Predictions lock 1 hour before kick-off
+        <div class="scoring-info">
+          <b>Scoring:</b> 3 pts exact score, 1 pt correct result.
+          <span class="bonus-line">🔥 <b>Goal Fest</b> +3, exact score on a match with 5+ total goals</span>
+          <span class="bonus-line">⚡ <b>Upset Special</b> +2 (result) / +4 (exact) when a severe underdog (10+ table places) wins outright and you called it</span>
+          <span class="bonus-line">🤝 <b>Underdog Draw</b> +1, a severe underdog draws and you called it</span>
+          <span class="bonus-line">💯 <b>Perfect Gameweek</b> +5 (all results) / +10 (all exact)</span>
+          <span class="bonus-line">★ <b>Banker</b>, doubles one nominated pick's points, 8 uses per season</span>
+          <span class="bonus-line">Predictions lock 19:00 SGT/KL every Saturday for that whole gameweek.</span>
         </div>
       </div>
-      <div class="filter-row" id="predFilterRow">
-        <div class="filter-btn active" onclick="setPredFilter(this,'all')">All</div>
-        <div class="filter-btn" onclick="setPredFilter(this,'open')">Open</div>
-        <div class="filter-btn" onclick="setPredFilter(this,'predicted')">Predicted</div>
-        <div class="filter-btn" onclick="setPredFilter(this,'locked')">Locked</div>
-        <div class="sort-toggle">
-          <div class="sort-btn active" id="predSortDate" onclick="setPredSort('date')">Date</div>
-          <div class="sort-btn" id="predSortGroup" onclick="setPredSort('group')">Group</div>
-        </div>
-      </div>
+      <div class="gw-picker" id="gwPicker"></div>
+      <div class="deadline-strip" id="deadlineStrip"></div>
       <div id="predictionsList"></div>
     </div>
 
@@ -981,24 +1096,12 @@
     <div class="page" id="page-schedule">
       <div class="card" style="padding:14px 16px; margin-bottom:16px;">
         <div class="tz-row">
+          <div class="tz-badge"><span>SGT/KL</span>Singapore / Kuala Lumpur</div>
+          <div class="tz-badge"><span>UK</span>UK local</div>
           <div class="tz-badge"><span>AET</span>Australian Eastern</div>
-          <div class="tz-badge"><span>KL</span>Kuala Lumpur</div>
-          <div class="tz-badge"><span>BST</span>British Summer</div>
         </div>
       </div>
-      <div class="filter-row" id="schedFilterRow">
-        <div class="filter-btn active" onclick="setSchedFilter(this,'all')">All</div>
-        <div class="filter-btn" onclick="setSchedFilter(this,'Group Stage')">Groups</div>
-        <div class="filter-btn" onclick="setSchedFilter(this,'Round of 32')">R32</div>
-        <div class="filter-btn" onclick="setSchedFilter(this,'Round of 16')">R16</div>
-        <div class="filter-btn" onclick="setSchedFilter(this,'Quarter-Final')">QF</div>
-        <div class="filter-btn" onclick="setSchedFilter(this,'Semi-Final')">SF</div>
-        <div class="filter-btn" onclick="setSchedFilter(this,'Final')">Final</div>
-        <div class="sort-toggle">
-          <div class="sort-btn active" id="schedSortDate" onclick="setSchedSort('date')">Date</div>
-          <div class="sort-btn" id="schedSortGroup" onclick="setSchedSort('group')">Group</div>
-        </div>
-      </div>
+      <div class="gw-picker" id="schedGwPicker"></div>
       <div id="scheduleList"></div>
     </div>
 
@@ -1007,20 +1110,16 @@
       <div class="card">
         <div class="card-title">ADMIN PANEL</div>
         <div class="admin-section">
-          <div class="admin-section-title">ENTER RESULTS</div>
+          <div class="admin-section-title">GAMEWEEK SHORTLIST &amp; RESULTS</div>
+          <div class="gw-picker" id="adminGwPicker"></div>
           <input class="search-input" id="adminMatchSearch" placeholder="Search match..." oninput="renderAdminMatches()">
           <div id="adminMatchList"></div>
         </div>
         <div class="admin-section">
-          <div class="admin-section-title">KNOCKOUT TEAM NAMES</div>
-          <p style="font-size:13px; color:var(--text2); margin-bottom:12px;">Update team names for knockout fixtures as teams qualify. This only affects display. It does not change predictions or results.</p>
-          <input class="search-input" id="koSearchInput" placeholder="Search knockout fixture..." oninput="renderKnockoutEditor()">
-          <div id="knockoutEditorList"></div>
-        </div>
-        <div class="admin-section">
-          <div class="admin-section-title">OPEN KNOCKOUT ROUNDS FOR PREDICTIONS</div>
-          <p style="font-size:13px; color:var(--text2); margin-bottom:12px;">Knockout rounds stay locked until you open them. Enter the team names first, then open the round so players can predict. The 1 hour kick-off lock still applies once a round is open.</p>
-          <div id="koUnlockList"></div>
+          <div class="admin-section-title">KICK-OFF TIME OVERRIDES</div>
+          <p style="font-size:13px; color:var(--text2); margin-bottom:12px;">The Premier League confirms exact kick-off times in batches through the season. Correct a match's date/time here as soon as it's confirmed or changes &mdash; this does not need a file rebuild.</p>
+          <input class="search-input" id="koSearchInput" placeholder="Search match to edit kick-off..." oninput="renderKickoffEditor()">
+          <div id="kickoffEditorList"></div>
         </div>
         <div class="admin-section">
           <div class="admin-section-title">MANAGE PLAYERS</div>
@@ -1033,7 +1132,7 @@
         </div>
         <div class="admin-section">
           <div class="admin-section-title">BACKUP &amp; RESTORE</div>
-          <p style="font-size:13px; color:var(--text2); margin-bottom:12px;">Download a full backup of all players, predictions and results. Do this after each round. If anything ever goes wrong, restore from a backup file.</p>
+          <p style="font-size:13px; color:var(--text2); margin-bottom:12px;">Download a full backup of all players, predictions and results. Do this after each gameweek. If anything ever goes wrong, restore from a backup file.</p>
           <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
             <button class="btn-confirm" onclick="exportData()">⬇ Download backup</button>
             <button class="btn-recalc" onclick="document.getElementById('importFileInput').click()">⬆ Restore from file</button>
@@ -1062,296 +1161,306 @@
 
 <script>
 // ─── CONFIG ─────────────────────────────────────────────────────────────────
-// OPTIONAL: paste your JSONBin credentials here ONCE, before sharing the link.
-// When these are filled in, every visitor connects to your competition
-// automatically and goes straight to the sign-in screen (no setup screen).
-// Leave both as empty strings to use the per-browser setup screen instead.
+// Paste your JSONBin credentials here ONCE, before sharing the link, so every
+// visitor connects automatically and goes straight to sign-in. This is a NEW
+// bin — do not reuse the World Cup app's credentials, that would mix data.
+// Leave both blank to use the per-browser first-run setup screen instead.
 const EMBEDDED_CONFIG = {
-  masterKey: '$2a$10$NUDJXFfwfPqbUZyuLJKusOVrW5eowhNgzIQAoEtYlA.L0mZdR/DDi',
-  binId: '6a40f387da38895dfe0afde8'
+  masterKey: '$2a$10$QtPQ3ruUq1OF7fpJsM0p9u4O94MupW/EaDBJLWX8WiLFQiyORwtym',
+  binId: '6a882867da38895dfeff37ee'
 };
 
-const ADMIN_NAME_KEY = 'wc2026_admin';
-const CONFIG_KEY = 'wc2026_config';
-const SESSION_KEY = 'wc2026_session';
+const ADMIN_NAME_KEY = 'epl2627_admin';
+const CONFIG_KEY = 'epl2627_config';
+const SESSION_KEY = 'epl2627_session';
 
-// ─── MATCH DATA ──────────────────────────────────────────────────────────────
-// All times stored as UTC ISO strings
-// 2026 WC Group Stage: Jun 11 – Jul 2
-// Knockout: Jul 4 – Jul 19
-// Source: FIFA official schedule (confirmed group stage, placeholder TBD for knockouts)
+// ─── CLUBS (2026-27, 20 clubs) ────────────────────────────────────────────────
+const CLUBS = {
+  'Arsenal': { code:'ARS', color:'#EF0107' },
+  'Aston Villa': { code:'AVL', color:'#670E36' },
+  'AFC Bournemouth': { code:'BOU', color:'#B50E12' },
+  'Brentford': { code:'BRE', color:'#E30613' },
+  'Brighton & Hove Albion': { code:'BHA', color:'#0057B8' },
+  'Chelsea': { code:'CHE', color:'#034694' },
+  'Coventry City': { code:'COV', color:'#4B92DB' },
+  'Crystal Palace': { code:'CRY', color:'#1B458F' },
+  'Everton': { code:'EVE', color:'#003399' },
+  'Fulham': { code:'FUL', color:'#1a1a1a' },
+  'Hull City': { code:'HUL', color:'#F18A01' },
+  'Ipswich Town': { code:'IPS', color:'#0044A9' },
+  'Leeds United': { code:'LEE', color:'#1D428A' },
+  'Liverpool': { code:'LIV', color:'#C8102E' },
+  'Manchester City': { code:'MCI', color:'#6CABDD' },
+  'Manchester United': { code:'MUN', color:'#DA291C' },
+  'Newcastle United': { code:'NEW', color:'#2b2b2b' },
+  'Nottingham Forest': { code:'NFO', color:'#DD0000' },
+  'Sunderland': { code:'SUN', color:'#EB172B' },
+  'Tottenham Hotspur': { code:'TOT', color:'#132257' },
+};
 
+// The 7 "anchor" clubs — a shortlisted fixture for each of these is required
+// every gameweek wherever one exists (see the exclusion/wildcard rules below).
+const ANCHOR_CLUBS = ['Manchester United','Arsenal','Newcastle United','Liverpool','Chelsea','Manchester City','Tottenham Hotspur'];
+const ANCHOR_TARGET = 7; // target matches per gameweek shortlist
+
+// Proxy pecking order used for upset detection until the live 2026-27 table
+// has enough matches behind it (see LIVE_TABLE_MIN_MATCHES). Built from the
+// confirmed final 2025-26 table (17 clubs) with the 3 promoted clubs seeded
+// at the bottom. 1 = strongest.
+const PROXY_RANKING_2026 = [
+  'Arsenal','Manchester City','Manchester United','Aston Villa','Liverpool',
+  'AFC Bournemouth','Sunderland','Brighton & Hove Albion','Brentford','Chelsea',
+  'Fulham','Newcastle United','Everton','Leeds United','Crystal Palace',
+  'Nottingham Forest','Tottenham Hotspur','Coventry City','Hull City','Ipswich Town'
+];
+const UPSET_GAP = 10;              // table-place gap that counts as a "severe" underdog
+const LIVE_TABLE_MIN_MATCHES = 4;  // avg matches played per club before trusting the live table over the proxy
+
+// ─── GAMEWEEKS ──────────────────────────────────────────────────────────────
+// deadlineUTC: the single round-wide prediction lock for that gameweek —
+// 19:00 Singapore/KL time on the Saturday, before that gameweek's earliest
+// eligible (non-Friday) kick-off. isTest + resetAtUTC: Gameweek 1 runs fully
+// live so everyone can try the app, then its contribution to every player's
+// total is zeroed out automatically once resetAtUTC passes (1 hour before
+// Gameweek 2's own deadline) — see isTestReset(). No admin action needed.
+const GAMEWEEKS = {
+  1: { deadlineUTC: '2026-08-22T11:00:00Z', isTest: true, resetAtUTC: '2026-08-29T10:00:00Z' },
+  2: { deadlineUTC: '2026-08-29T11:00:00Z' },
+  3: { deadlineUTC: '2026-09-05T11:00:00Z' },
+};
+
+// ─── MATCHES ────────────────────────────────────────────────────────────────
+// Real fixtures for gameweeks 1-3 (premierleague.com / Sky Sports, confirmed
+// 21 Aug 2026). tag: 'anchor' (one of the 7 required clubs) | 'wildcard'
+// (admin's free pick to fill a slot freed by a derby or a Friday exclusion) |
+// null (not currently in the shortlist). reason:'friday' marks a match
+// excluded from selection because it kicks off Friday night UK time.
+// More gameweeks get appended here over the season (manually, and via the
+// scheduled kick-off-time refresh checks) — see project memory for the plan.
 const MATCHES = (() => {
-  const gs = [
-    // GROUP A
-    ["A","Group Stage","Mexico","South Africa","2026-06-11T19:00:00Z","Estadio Azteca, Mexico City"],
-    ["A","Group Stage","South Korea","Czechia","2026-06-12T02:00:00Z","Estadio Akron, Guadalajara"],
-    ["A","Group Stage","Czechia","South Africa","2026-06-18T16:00:00Z","Mercedes-Benz Stadium, Atlanta"],
-    ["A","Group Stage","Mexico","South Korea","2026-06-19T01:00:00Z","Estadio Akron, Guadalajara"],
-    ["A","Group Stage","Czechia","Mexico","2026-06-25T01:00:00Z","Estadio Azteca, Mexico City"],
-    ["A","Group Stage","South Africa","South Korea","2026-06-25T01:00:00Z","Estadio BBVA, Monterrey"],
-    // GROUP B
-    ["B","Group Stage","Canada","Bosnia and Herzegovina","2026-06-12T19:00:00Z","BMO Field, Toronto"],
-    ["B","Group Stage","Qatar","Switzerland","2026-06-13T19:00:00Z","Levi\'s Stadium, San Francisco Bay Area"],
-    ["B","Group Stage","Switzerland","Bosnia and Herzegovina","2026-06-18T19:00:00Z","SoFi Stadium, Los Angeles"],
-    ["B","Group Stage","Canada","Qatar","2026-06-18T22:00:00Z","BC Place, Vancouver"],
-    ["B","Group Stage","Switzerland","Canada","2026-06-24T19:00:00Z","BC Place, Vancouver"],
-    ["B","Group Stage","Bosnia and Herzegovina","Qatar","2026-06-24T19:00:00Z","Lumen Field, Seattle"],
-    // GROUP C
-    ["C","Group Stage","Brazil","Morocco","2026-06-13T22:00:00Z","MetLife Stadium, New York"],
-    ["C","Group Stage","Haiti","Scotland","2026-06-14T01:00:00Z","Gillette Stadium, Boston"],
-    ["C","Group Stage","Scotland","Morocco","2026-06-19T22:00:00Z","Gillette Stadium, Boston"],
-    ["C","Group Stage","Brazil","Haiti","2026-06-20T00:30:00Z","Lincoln Financial Field, Philadelphia"],
-    ["C","Group Stage","Scotland","Brazil","2026-06-24T22:00:00Z","Hard Rock Stadium, Miami"],
-    ["C","Group Stage","Morocco","Haiti","2026-06-24T22:00:00Z","Mercedes-Benz Stadium, Atlanta"],
-    // GROUP D
-    ["D","Group Stage","USA","Paraguay","2026-06-13T01:00:00Z","SoFi Stadium, Los Angeles"],
-    ["D","Group Stage","Australia","Turkiye","2026-06-14T04:00:00Z","BC Place, Vancouver"],
-    ["D","Group Stage","USA","Australia","2026-06-19T19:00:00Z","Lumen Field, Seattle"],
-    ["D","Group Stage","Turkiye","Paraguay","2026-06-20T03:00:00Z","Levi\'s Stadium, San Francisco Bay Area"],
-    ["D","Group Stage","Turkiye","USA","2026-06-26T02:00:00Z","SoFi Stadium, Los Angeles"],
-    ["D","Group Stage","Paraguay","Australia","2026-06-26T02:00:00Z","Levi\'s Stadium, San Francisco Bay Area"],
-    // GROUP E
-    ["E","Group Stage","Germany","Curacao","2026-06-14T17:00:00Z","NRG Stadium, Houston"],
-    ["E","Group Stage","Ivory Coast","Ecuador","2026-06-14T23:00:00Z","Lincoln Financial Field, Philadelphia"],
-    ["E","Group Stage","Germany","Ivory Coast","2026-06-20T20:00:00Z","BMO Field, Toronto"],
-    ["E","Group Stage","Ecuador","Curacao","2026-06-21T00:00:00Z","Arrowhead Stadium, Kansas City"],
-    ["E","Group Stage","Curacao","Ivory Coast","2026-06-25T20:00:00Z","Lincoln Financial Field, Philadelphia"],
-    ["E","Group Stage","Ecuador","Germany","2026-06-25T20:00:00Z","MetLife Stadium, New York"],
-    // GROUP F
-    ["F","Group Stage","Netherlands","Japan","2026-06-14T20:00:00Z","AT&T Stadium, Dallas"],
-    ["F","Group Stage","Sweden","Tunisia","2026-06-15T02:00:00Z","Estadio BBVA, Monterrey"],
-    ["F","Group Stage","Netherlands","Sweden","2026-06-20T17:00:00Z","NRG Stadium, Houston"],
-    ["F","Group Stage","Tunisia","Japan","2026-06-21T04:00:00Z","Estadio BBVA, Monterrey"],
-    ["F","Group Stage","Japan","Sweden","2026-06-25T23:00:00Z","AT&T Stadium, Dallas"],
-    ["F","Group Stage","Tunisia","Netherlands","2026-06-25T23:00:00Z","Arrowhead Stadium, Kansas City"],
-    // GROUP G
-    ["G","Group Stage","Belgium","Egypt","2026-06-15T19:00:00Z","Lumen Field, Seattle"],
-    ["G","Group Stage","Iran","New Zealand","2026-06-16T01:00:00Z","SoFi Stadium, Los Angeles"],
-    ["G","Group Stage","Belgium","Iran","2026-06-21T19:00:00Z","SoFi Stadium, Los Angeles"],
-    ["G","Group Stage","New Zealand","Egypt","2026-06-22T01:00:00Z","BC Place, Vancouver"],
-    ["G","Group Stage","Egypt","Iran","2026-06-27T03:00:00Z","Lumen Field, Seattle"],
-    ["G","Group Stage","New Zealand","Belgium","2026-06-27T03:00:00Z","BC Place, Vancouver"],
-    // GROUP H
-    ["H","Group Stage","Spain","Cape Verde","2026-06-15T16:00:00Z","Mercedes-Benz Stadium, Atlanta"],
-    ["H","Group Stage","Saudi Arabia","Uruguay","2026-06-15T22:00:00Z","Hard Rock Stadium, Miami"],
-    ["H","Group Stage","Spain","Saudi Arabia","2026-06-21T16:00:00Z","Mercedes-Benz Stadium, Atlanta"],
-    ["H","Group Stage","Uruguay","Cape Verde","2026-06-21T22:00:00Z","Hard Rock Stadium, Miami"],
-    ["H","Group Stage","Cape Verde","Saudi Arabia","2026-06-27T00:00:00Z","NRG Stadium, Houston"],
-    ["H","Group Stage","Uruguay","Spain","2026-06-27T00:00:00Z","Estadio Akron, Guadalajara"],
-    // GROUP I
-    ["I","Group Stage","France","Senegal","2026-06-16T19:00:00Z","MetLife Stadium, New York"],
-    ["I","Group Stage","Iraq","Norway","2026-06-16T22:00:00Z","Gillette Stadium, Boston"],
-    ["I","Group Stage","France","Iraq","2026-06-22T21:00:00Z","Lincoln Financial Field, Philadelphia"],
-    ["I","Group Stage","Norway","Senegal","2026-06-23T00:00:00Z","MetLife Stadium, New York"],
-    ["I","Group Stage","Norway","France","2026-06-26T19:00:00Z","Gillette Stadium, Boston"],
-    ["I","Group Stage","Senegal","Iraq","2026-06-26T19:00:00Z","BMO Field, Toronto"],
-    // GROUP J
-    ["J","Group Stage","Argentina","Algeria","2026-06-17T01:00:00Z","Arrowhead Stadium, Kansas City"],
-    ["J","Group Stage","Austria","Jordan","2026-06-17T04:00:00Z","Levi\'s Stadium, San Francisco Bay Area"],
-    ["J","Group Stage","Argentina","Austria","2026-06-22T17:00:00Z","AT&T Stadium, Dallas"],
-    ["J","Group Stage","Jordan","Algeria","2026-06-23T03:00:00Z","Levi\'s Stadium, San Francisco Bay Area"],
-    ["J","Group Stage","Algeria","Austria","2026-06-28T02:00:00Z","Arrowhead Stadium, Kansas City"],
-    ["J","Group Stage","Jordan","Argentina","2026-06-28T02:00:00Z","AT&T Stadium, Dallas"],
-    // GROUP K
-    ["K","Group Stage","Portugal","DR Congo","2026-06-17T17:00:00Z","NRG Stadium, Houston"],
-    ["K","Group Stage","Uzbekistan","Colombia","2026-06-18T02:00:00Z","Estadio Azteca, Mexico City"],
-    ["K","Group Stage","Portugal","Uzbekistan","2026-06-23T17:00:00Z","NRG Stadium, Houston"],
-    ["K","Group Stage","Colombia","DR Congo","2026-06-24T02:00:00Z","Estadio Akron, Guadalajara"],
-    ["K","Group Stage","Colombia","Portugal","2026-06-27T23:30:00Z","Hard Rock Stadium, Miami"],
-    ["K","Group Stage","DR Congo","Uzbekistan","2026-06-27T23:30:00Z","Mercedes-Benz Stadium, Atlanta"],
-    // GROUP L
-    ["L","Group Stage","England","Croatia","2026-06-17T20:00:00Z","AT&T Stadium, Dallas"],
-    ["L","Group Stage","Ghana","Panama","2026-06-17T23:00:00Z","BMO Field, Toronto"],
-    ["L","Group Stage","England","Ghana","2026-06-23T20:00:00Z","Gillette Stadium, Boston"],
-    ["L","Group Stage","Panama","Croatia","2026-06-23T23:00:00Z","BMO Field, Toronto"],
-    ["L","Group Stage","Panama","England","2026-06-27T21:00:00Z","MetLife Stadium, New York"],
-    ["L","Group Stage","Croatia","Ghana","2026-06-27T21:00:00Z","Lincoln Financial Field, Philadelphia"],
+  const raw = [
+    // gw, home, away, utc, tag, inComp, reason
+    [1,'Arsenal','Coventry City','2026-08-21T19:00:00Z', null, false, 'friday'],
+    [1,'Hull City','Manchester United','2026-08-22T11:30:00Z','anchor', true, null],
+    [1,'Everton','Crystal Palace','2026-08-22T14:00:00Z', null, false, null],
+    [1,'Ipswich Town','Sunderland','2026-08-22T14:00:00Z', null, false, null],
+    [1,'Nottingham Forest','Leeds United','2026-08-22T14:00:00Z','wildcard', true, null],
+    [1,'Brentford','Tottenham Hotspur','2026-08-22T16:30:00Z','anchor', true, null],
+    [1,'Brighton & Hove Albion','Aston Villa','2026-08-23T13:00:00Z','wildcard', true, null],
+    [1,'Manchester City','AFC Bournemouth','2026-08-23T13:00:00Z','anchor', true, null],
+    [1,'Newcastle United','Liverpool','2026-08-23T15:30:00Z','anchor', true, null],
+    [1,'Fulham','Chelsea','2026-08-24T19:00:00Z','anchor', true, null],
+    // GW2 — real start of the competition
+    [2,'Crystal Palace','Manchester City','2026-08-28T19:00:00Z', null, false, 'friday'],
+    [2,'Liverpool','Nottingham Forest','2026-08-29T11:30:00Z','anchor', true, null],
+    [2,'AFC Bournemouth','Everton','2026-08-29T14:00:00Z','wildcard', true, null],
+    [2,'Coventry City','Hull City','2026-08-29T14:00:00Z', null, false, null],
+    [2,'Tottenham Hotspur','Newcastle United','2026-08-29T16:30:00Z','anchor', true, null],
+    [2,'Chelsea','Brighton & Hove Albion','2026-08-30T13:00:00Z','anchor', true, null],
+    [2,'Leeds United','Brentford','2026-08-30T13:00:00Z','wildcard', true, null],
+    [2,'Sunderland','Fulham','2026-08-30T13:00:00Z', null, false, null],
+    [2,'Manchester United','Ipswich Town','2026-08-30T15:30:00Z','anchor', true, null],
+    [2,'Aston Villa','Arsenal','2026-08-31T19:00:00Z','anchor', true, null],
+    // GW3
+    [3,'Ipswich Town','Liverpool','2026-09-04T19:00:00Z', null, false, 'friday'],
+    [3,'Newcastle United','AFC Bournemouth','2026-09-05T11:30:00Z','anchor', true, null],
+    [3,'Brentford','Sunderland','2026-09-05T14:00:00Z', null, false, null],
+    [3,'Brighton & Hove Albion','Leeds United','2026-09-05T14:00:00Z','wildcard', true, null],
+    [3,'Fulham','Crystal Palace','2026-09-05T14:00:00Z','wildcard', true, null],
+    [3,'Manchester City','Coventry City','2026-09-05T14:00:00Z','anchor', true, null],
+    [3,'Nottingham Forest','Tottenham Hotspur','2026-09-05T14:00:00Z','anchor', true, null],
+    [3,'Hull City','Aston Villa','2026-09-05T16:30:00Z', null, false, null],
+    [3,'Everton','Manchester United','2026-09-06T13:00:00Z','anchor', true, null],
+    [3,'Arsenal','Chelsea','2026-09-06T15:30:00Z','anchor', true, null],
   ];
-
-  const ko = [
-    // ROUND OF 32 (16 matches, 29 Jun - 4 Jul)
-    ["KO","Round of 32","2A","2B","2026-06-28T19:00:00Z","Los Angeles Stadium, Los Angeles"],
-    ["KO","Round of 32","1C","2F","2026-06-29T17:00:00Z","Houston Stadium, Houston"],
-    ["KO","Round of 32","1E","3ABCDF","2026-06-29T20:30:00Z","Boston Stadium, Boston"],
-    ["KO","Round of 32","1F","2C","2026-06-30T01:00:00Z","Monterrey Stadium, Monterrey"],
-    ["KO","Round of 32","2E","2I","2026-06-30T17:00:00Z","Dallas Stadium, Dallas"],
-    ["KO","Round of 32","1I","3CDFGH","2026-06-30T21:00:00Z","New York/New Jersey Stadium, New Jersey"],
-    ["KO","Round of 32","1A","3CEFHI","2026-07-01T01:00:00Z","Mexico City Stadium, Mexico City"],
-    ["KO","Round of 32","1L","3EHIJK","2026-07-01T16:00:00Z","Atlanta Stadium, Atlanta"],
-    ["KO","Round of 32","1G","3AEHIJ","2026-07-01T20:00:00Z","Seattle Stadium, Seattle"],
-    ["KO","Round of 32","1D","3BEFIJ","2026-07-02T00:00:00Z","San Francisco Bay Area Stadium, San Francisco Bay Area"],
-    ["KO","Round of 32","1H","2J","2026-07-02T19:00:00Z","Los Angeles Stadium, Los Angeles"],
-    ["KO","Round of 32","2K","2L","2026-07-02T23:00:00Z","Toronto Stadium, Toronto"],
-    ["KO","Round of 32","1B","3EFGIJ","2026-07-03T03:00:00Z","BC Place Vancouver, Vancouver"],
-    ["KO","Round of 32","2D","2G","2026-07-03T18:00:00Z","Dallas Stadium, Dallas"],
-    ["KO","Round of 32","1J","2H","2026-07-03T22:00:00Z","Miami Stadium, Miami"],
-    ["KO","Round of 32","1K","3DEIJL","2026-07-04T01:30:00Z","Kansas City Stadium, Kansas City"],
-    // ROUND OF 16 (8 matches, 5-8 Jul)
-    ["KO","Round of 16","W73","W75","2026-07-04T17:00:00Z","Houston Stadium, Houston"],
-    ["KO","Round of 16","W74","W77","2026-07-04T21:00:00Z","Philadelphia Stadium, Philadelphia"],
-    ["KO","Round of 16","W76","W78","2026-07-05T20:00:00Z","New York/New Jersey Stadium, New Jersey"],
-    ["KO","Round of 16","W79","W80","2026-07-06T00:00:00Z","Mexico City Stadium, Mexico City"],
-    ["KO","Round of 16","W83","W84","2026-07-06T19:00:00Z","Dallas Stadium, Dallas"],
-    ["KO","Round of 16","W81","W82","2026-07-07T00:00:00Z","Seattle Stadium, Seattle"],
-    ["KO","Round of 16","W86","W88","2026-07-07T16:00:00Z","Atlanta Stadium, Atlanta"],
-    ["KO","Round of 16","W85","W87","2026-07-07T20:00:00Z","BC Place Vancouver, Vancouver"],
-    // QUARTER-FINALS (4 matches, 10-12 Jul)
-    ["KO","Quarter-Final","W89","W90","2026-07-09T20:00:00Z","Boston Stadium, Boston"],
-    ["KO","Quarter-Final","W93","W94","2026-07-10T19:00:00Z","Los Angeles Stadium, Los Angeles"],
-    ["KO","Quarter-Final","W91","W92","2026-07-11T21:00:00Z","Miami Stadium, Miami"],
-    ["KO","Quarter-Final","W95","W96","2026-07-12T01:00:00Z","Kansas City Stadium, Kansas City"],
-    // SEMI-FINALS (2 matches, 15-16 Jul)
-    ["KO","Semi-Final","W97","W98","2026-07-14T19:00:00Z","Dallas Stadium, Dallas"],
-    ["KO","Semi-Final","W99","W100","2026-07-15T19:00:00Z","Atlanta Stadium, Atlanta"],
-    // 3RD PLACE (19 Jul)
-    ["KO","3rd Place","RU101","RU102","2026-07-18T21:00:00Z","Miami Stadium, Miami"],
-    // FINAL (20 Jul)
-    ["KO","Final","W101","W102","2026-07-19T19:00:00Z","New York/New Jersey Stadium, New Jersey"],
-  ];
-
-  const all = [];
-  [...gs, ...ko].forEach(([group, phase, home, away, utc, venue], i) => {
-    all.push({ id: `m${String(i+1).padStart(3,'0')}`, group, phase, home, away, utc, venue, origHome: home, origAway: away });
+  const counters = {};
+  return raw.map(([gw,home,away,utc,tag,inComp,reason]) => {
+    counters[gw] = (counters[gw]||0) + 1;
+    return { id:`g${gw}m${String(counters[gw]).padStart(2,'0')}`, gw, home, away, utc, tag, inComp, reason: reason||null };
   });
-  return all;
 })();
 
 // ─── TIME UTILS ──────────────────────────────────────────────────────────────
 function utcToZones(utcStr) {
   const d = new Date(utcStr);
-  const fmt = (tz) => d.toLocaleString('en-GB', {
-    timeZone: tz,
-    day: '2-digit', month: 'short',
-    hour: '2-digit', minute: '2-digit',
-    hour12: false
-  });
-  return {
-    aet: fmt('Australia/Sydney'),
-    kl:  fmt('Asia/Kuala_Lumpur'),
-    bst: fmt('Europe/London'),
-  };
+  const fmt = (tz) => d.toLocaleString('en-GB', { timeZone: tz, day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit', hour12:false });
+  return { sgt: fmt('Asia/Singapore'), uk: fmt('Europe/London'), aet: fmt('Australia/Sydney') };
+}
+function fmtDeadline(ms) {
+  if (!isFinite(ms)) return 'TBC';
+  return new Date(ms).toLocaleString('en-GB', { timeZone:'Asia/Singapore', weekday:'short', day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }) + ' SGT';
+}
+// SGT (UTC+8, no DST) datetime-local helpers for the admin kick-off editor —
+// admin thinks and enters in Singapore/KL time; we do the UTC conversion.
+function toDatetimeLocalSGT(utcStr) {
+  const d = new Date(utcStr);
+  const sgt = new Date(d.getTime() + 8*3600*1000);
+  const pad = n => String(n).padStart(2,'0');
+  return `${sgt.getUTCFullYear()}-${pad(sgt.getUTCMonth()+1)}-${pad(sgt.getUTCDate())}T${pad(sgt.getUTCHours())}:${pad(sgt.getUTCMinutes())}`;
+}
+function sgtLocalToUtcIso(val) {
+  const [datePart, timePart] = val.split('T');
+  const [y,mo,d] = datePart.split('-').map(Number);
+  const [h,mi] = timePart.split(':').map(Number);
+  return new Date(Date.UTC(y, mo-1, d, h-8, mi)).toISOString();
 }
 
-// ─── FLAGS ───────────────────────────────────────────────────────────────────
-// Unicode flag emoji per nation. Renders natively on iOS/Android/Mac.
-// (Windows shows the country code instead; fine for a mostly-mobile group.)
-const FLAGS = {
-  // Group A
-  'Mexico':'🇲🇽','South Africa':'🇿🇦','South Korea':'🇰🇷','Czechia':'🇨🇿',
-  // Group B
-  'Canada':'🇨🇦','Bosnia and Herzegovina':'🇧🇦','Qatar':'🇶🇦','Switzerland':'🇨🇭',
-  // Group C
-  'Brazil':'🇧🇷','Morocco':'🇲🇦','Haiti':'🇭🇹','Scotland':'🏴󠁧󠁢󠁳󠁣󠁴󠁿',
-  // Group D
-  'USA':'🇺🇸','Paraguay':'🇵🇾','Australia':'🇦🇺','Turkiye':'🇹🇷',
-  // Group E
-  'Germany':'🇩🇪','Curacao':'🇨🇼','Ivory Coast':'🇨🇮','Ecuador':'🇪🇨',
-  // Group F
-  'Netherlands':'🇳🇱','Japan':'🇯🇵','Sweden':'🇸🇪','Tunisia':'🇹🇳',
-  // Group G
-  'Iran':'🇮🇷','New Zealand':'🇳🇿','Belgium':'🇧🇪','Egypt':'🇪🇬',
-  // Group H
-  'Spain':'🇪🇸','Cape Verde':'🇨🇻','Saudi Arabia':'🇸🇦','Uruguay':'🇺🇾',
-  // Group I
-  'France':'🇫🇷','Senegal':'🇸🇳','Iraq':'🇮🇶','Norway':'🇳🇴',
-  // Group J
-  'Argentina':'🇦🇷','Algeria':'🇩🇿','Austria':'🇦🇹','Jordan':'🇯🇴',
-  // Group K
-  'Portugal':'🇵🇹','DR Congo':'🇨🇩','Uzbekistan':'🇺🇿','Colombia':'🇨🇴',
-  // Group L
-  'England':'🏴󠁧󠁢󠁥󠁮󠁧󠁿','Croatia':'🇭🇷','Ghana':'🇬🇭','Panama':'🇵🇦',
-};
-// Returns "🇲🇽 Mexico" when we know the flag, otherwise just the name
-// (knockout placeholders like "Winner A1" get no flag).
-function teamLabel(name) {
-  const f = FLAGS[name];
-  return f ? `${f} ${escapeHtml(name)}` : escapeHtml(name);
-}
-// Name only (no flag), used when flag is rendered separately in the vs-group
-function teamNameOnly(name) { return escapeHtml(name); }
-// Flag only, empty string for knockout placeholders with no entry in FLAGS
-function teamFlag(name) { return FLAGS[name] || ''; }
-
-// ─── COUNTDOWN (next deadline only) ─────────────────────────────────────────
-// The lock time for a match is 1 hour before kick-off. The countdown tracks the
-// single soonest deadline that has NOT yet passed, and shows on EVERY match that
-// shares that deadline (group finales kick off simultaneously in pairs/threes).
-function lockTimeMs(m) { return new Date(m.utc).getTime() - 60 * 60 * 1000; }
-
-// The soonest not-yet-passed lock time across all matches (ms), or null if none.
-function nextDeadlineMs() {
-  const now = Date.now();
-  let best = Infinity;
-  for (const m of MATCHES) {
-    const t = lockTimeMs(m);
-    if (t > now && t < best) best = t;
-  }
-  return best === Infinity ? null : best;
-}
-
-// Formats milliseconds remaining as e.g. "2d 04h 13m" or "47m 12s" when close.
-function fmtCountdown(ms) {
-  if (ms <= 0) return 'closing';
-  const s = Math.floor(ms / 1000);
-  const d = Math.floor(s / 86400);
-  const h = Math.floor((s % 86400) / 3600);
-  const m = Math.floor((s % 3600) / 60);
-  const sec = s % 60;
-  if (d > 0) return `${d}d ${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m`;
-  if (h > 0) return `${h}h ${String(m).padStart(2,'0')}m ${String(sec).padStart(2,'0')}s`;
-  return `${m}m ${String(sec).padStart(2,'0')}s`;
-}
-
-// Renders the countdown span for EVERY match sharing the next deadline; empty otherwise.
-function countdownHtml(m) {
-  const next = nextDeadlineMs();
-  if (next === null || lockTimeMs(m) !== next) return '';
-  const ms = next - Date.now();
-  return `<span class="countdown" data-countdown="${next}">Time to next deadline: ${fmtCountdown(ms)}</span>`;
-}
-
-// Ticks every second, updating any visible countdown spans live.
-function tickCountdowns() {
-  document.querySelectorAll('.countdown[data-countdown]').forEach(el => {
-    const ms = parseInt(el.getAttribute('data-countdown')) - Date.now();
-    el.textContent = 'Time to next deadline: ' + fmtCountdown(ms);
-  });
-}
-setInterval(tickCountdowns, 1000);
-
-// Maps each knockout phase to a settings key for the admin unlock switch
-const KO_PHASES = ['Round of 32', 'Round of 16', 'Quarter-Final', 'Semi-Final', '3rd Place', 'Final'];
-function koUnlockKey(phase) { return 'unlock_' + phase.replace(/[^a-z0-9]/gi, '_'); }
-
-// A match is locked for predictions if EITHER:
-//  (a) it is within 1 hour of kick-off (or already started), OR
-//  (b) it is a knockout match in a round the admin has not yet unlocked.
-// Accepts a match object. (Older calls passed m.utc; we handle both.)
-function isLocked(matchOrUtc) {
-  const m = (typeof matchOrUtc === 'string') ? { utc: matchOrUtc, phase: null } : matchOrUtc;
-  // Knockout round gate
-  if (m.phase && KO_PHASES.includes(m.phase)) {
-    const db = getDB();
-    const unlocked = db.settings && db.settings[koUnlockKey(m.phase)] === true;
-    if (!unlocked) return true; // round not yet opened by admin
-  }
-  // Time gate
-  const kickoff = new Date(m.utc);
-  const lockTime = new Date(kickoff.getTime() - 60 * 60 * 1000);
-  return new Date() >= lockTime;
-}
-
-function isFinalScore(matchId) {
+// ─── OVERRIDES (admin-editable, live in JSONBin — no rebuild needed) ────────
+// Kick-off time corrections, wildcard swaps, and postponements all layer on
+// top of the hardcoded defaults above via db.overrides[matchId].
+function effectiveMatch(m) {
   const db = getDB();
-  return db.results && db.results[matchId] !== undefined;
+  const o = (db.overrides && db.overrides[m.id]) || {};
+  return { ...m, ...o };
+}
+function isPostponed(em) { return em.postponed === true; }
+
+// ─── GAMEWEEK DEADLINES / LOCK ───────────────────────────────────────────────
+function isTestGw(gw) { return !!(GAMEWEEKS[gw] && GAMEWEEKS[gw].isTest); }
+function isTestReset(gw) {
+  const g = GAMEWEEKS[gw];
+  if (!g || !g.isTest) return false;
+  return Date.now() >= new Date(g.resetAtUTC).getTime();
+}
+function gwDeadlineMs(gw) {
+  const g = GAMEWEEKS[gw];
+  if (g && g.deadlineUTC) return new Date(g.deadlineUTC).getTime();
+  const gwMatches = MATCHES.filter(m => m.gw === gw).map(effectiveMatch).filter(m => m.inComp);
+  if (!gwMatches.length) return Infinity;
+  const earliest = Math.min(...gwMatches.map(m => new Date(m.utc).getTime()));
+  return earliest - 60*60*1000; // fallback: 1hr before earliest in-comp match
+}
+function isGwLocked(gw) { return Date.now() >= gwDeadlineMs(gw); }
+function isLocked(m) { return isGwLocked(m.gw); }
+function allGws() { return [...new Set(MATCHES.map(m=>m.gw))].sort((a,b)=>a-b); }
+function defaultGw() {
+  const gws = allGws();
+  const open = gws.find(gw => !isGwLocked(gw));
+  return open !== undefined ? open : gws[gws.length-1];
+}
+
+// ─── UPSET DETECTION ──────────────────────────────────────────────────────────
+function computeLiveTable(beforeGw) {
+  const db = getDB();
+  const stats = {};
+  Object.keys(CLUBS).forEach(c => stats[c] = { played:0, pts:0, gf:0, ga:0 });
+  MATCHES.forEach(m => {
+    if (m.gw >= beforeGw) return;
+    const em = effectiveMatch(m);
+    if (isPostponed(em)) return;
+    const res = db.results && db.results[m.id];
+    if (!res) return;
+    const h = stats[m.home], a = stats[m.away];
+    if (!h || !a) return;
+    h.played++; a.played++;
+    h.gf += res.home; h.ga += res.away;
+    a.gf += res.away; a.ga += res.home;
+    if (res.home > res.away) h.pts += 3;
+    else if (res.away > res.home) a.pts += 3;
+    else { h.pts++; a.pts++; }
+  });
+  return stats;
+}
+function getRankingForGw(gw) {
+  const live = computeLiveTable(gw);
+  const clubCount = Object.keys(CLUBS).length;
+  const avgPlayed = Object.values(live).reduce((s,t)=>s+t.played,0) / clubCount;
+  const table = {};
+  if (avgPlayed >= LIVE_TABLE_MIN_MATCHES) {
+    const ranked = Object.entries(live).sort((a,b) => {
+      const [,sa]=a, [,sb]=b;
+      if (sb.pts !== sa.pts) return sb.pts - sa.pts;
+      const gdA=sa.gf-sa.ga, gdB=sb.gf-sb.ga;
+      if (gdB !== gdA) return gdB - gdA;
+      return sb.gf - sa.gf;
+    });
+    ranked.forEach(([club], i) => { table[club] = { rank: i+1 }; });
+  } else {
+    PROXY_RANKING_2026.forEach((club, i) => { table[club] = { rank: i+1 }; });
+  }
+  return table;
+}
+function rankOf(club, gw) {
+  const t = getRankingForGw(gw);
+  return t[club] ? t[club].rank : (PROXY_RANKING_2026.indexOf(club)+1 || 20);
+}
+function isSevereUpset(match, result) {
+  if (result.home === result.away) return false;
+  const winner = result.home > result.away ? match.home : match.away;
+  const loser = result.home > result.away ? match.away : match.home;
+  return (rankOf(winner, match.gw) - rankOf(loser, match.gw)) >= UPSET_GAP;
+}
+function isSevereDrawUpset(match, result) {
+  if (result.home !== result.away) return false;
+  return Math.abs(rankOf(match.home, match.gw) - rankOf(match.away, match.gw)) >= UPSET_GAP;
+}
+
+// ─── SCORING ──────────────────────────────────────────────────────────────────
+function calcMatchPts(match, pred, result) {
+  if (!pred || !result) return null;
+  const exact = pred.home === result.home && pred.away === result.away;
+  const correctResult = exact || Math.sign(pred.home - pred.away) === Math.sign(result.home - result.away);
+  const base = exact ? 3 : (correctResult ? 1 : 0);
+  const bonuses = [];
+  const totalGoals = result.home + result.away;
+  if (exact && totalGoals >= 5) bonuses.push({ key:'goalfest', label:'Goal Fest', pts:3 });
+  if (correctResult) {
+    if (result.home !== result.away) {
+      if (isSevereUpset(match, result)) bonuses.push({ key:'upset', label:'Upset Special', pts: exact ? 4 : 2 });
+    } else {
+      if (isSevereDrawUpset(match, result)) bonuses.push({ key:'draw', label:'Underdog Draw', pts:1 });
+    }
+  }
+  const bonusTotal = bonuses.reduce((s,b)=>s+b.pts, 0);
+  return { base, exact, correctResult, bonuses, bonusTotal, total: base + bonusTotal };
+}
+function bankersUsedCount(playerKey) {
+  const db = getDB();
+  const picks = (db.bankerPick && db.bankerPick[playerKey]) || {};
+  return Object.keys(picks).filter(gw => !isTestGw(Number(gw))).length;
+}
+function bankersRemaining(playerKey) { return Math.max(0, 8 - bankersUsedCount(playerKey)); }
+
+function calcPlayerStats(playerKey) {
+  const db = getDB();
+  const preds = (db.predictions && db.predictions[playerKey]) || {};
+  const predicted = Object.keys(preds).length;
+  let exact = 0, pts = 0, bonusPts = 0;
+  const perGw = {};
+  MATCHES.forEach(m => {
+    const em = effectiveMatch(m);
+    if (!em.inComp) return;
+    if (isPostponed(em)) return;
+    const res = db.results && db.results[m.id];
+    if (!res) return;
+    if (isTestReset(m.gw)) return;
+    if (!perGw[m.gw]) perGw[m.gw] = { total:0, correct:0, exactCount:0 };
+    perGw[m.gw].total++;
+    const pred = preds[m.id];
+    const calc = pred ? calcMatchPts(em, pred, res) : null;
+    if (!calc) return;
+    let matchTotal = calc.total;
+    const bankerPickId = db.bankerPick && db.bankerPick[playerKey] && db.bankerPick[playerKey][m.gw];
+    const isBanker = bankerPickId === m.id;
+    if (isBanker) matchTotal *= 2;
+    if (calc.exact) { exact++; perGw[m.gw].exactCount++; }
+    if (calc.correctResult) perGw[m.gw].correct++;
+    pts += matchTotal;
+    bonusPts += calc.bonusTotal * (isBanker?2:1);
+  });
+  Object.entries(perGw).forEach(([gw, s]) => {
+    if (isTestReset(Number(gw))) return;
+    if (s.total === 0) return;
+    if (s.exactCount === s.total) { pts += 10; bonusPts += 10; }
+    else if (s.correct === s.total) { pts += 5; bonusPts += 5; }
+  });
+  return { exact, pts, bonusPts, predicted };
 }
 
 // ─── JSONBIN ─────────────────────────────────────────────────────────────────
 let _config = null;
 function getConfig() {
   if (_config) return _config;
-  // Embedded credentials take priority: everyone shares them, no setup screen.
   if (EMBEDDED_CONFIG.masterKey && EMBEDDED_CONFIG.binId) {
     _config = { masterKey: EMBEDDED_CONFIG.masterKey, binId: EMBEDDED_CONFIG.binId };
     return _config;
@@ -1360,62 +1469,41 @@ function getConfig() {
   if (raw) { _config = JSON.parse(raw); return _config; }
   return null;
 }
-
-// Retries a network call a few times with exponential backoff before giving up.
-// Smooths over brief JSONBin outages and flaky mobile connections near deadlines.
 async function withRetry(fn, label) {
-  const delays = [400, 1000, 2500]; // up to 3 retries
+  const delays = [400, 1000, 2500];
   let lastErr;
   for (let attempt = 0; attempt <= delays.length; attempt++) {
-    try {
-      return await fn();
-    } catch (e) {
-      lastErr = e;
-      if (attempt < delays.length) {
-        await new Promise(r => setTimeout(r, delays[attempt]));
-      }
-    }
+    try { return await fn(); }
+    catch (e) { lastErr = e; if (attempt < delays.length) await new Promise(r => setTimeout(r, delays[attempt])); }
   }
   throw new Error((label || 'Network') + ' failed after retries: ' + (lastErr && lastErr.message));
 }
-
 async function fetchDB() {
   const cfg = getConfig();
   if (!cfg) return null;
   return withRetry(async () => {
-    const res = await fetch(`https://api.jsonbin.io/v3/b/${cfg.binId}/latest`, {
-      headers: { 'X-Master-Key': cfg.masterKey }
-    });
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${cfg.binId}/latest`, { headers: { 'X-Master-Key': cfg.masterKey } });
     if (!res.ok) throw new Error('JSONBin fetch failed: ' + res.status);
     const data = await res.json();
     return data.record || {};
   }, 'Fetch');
 }
-
 async function saveDB(db) {
   const cfg = getConfig();
   if (!cfg) return;
   return withRetry(async () => {
     const res = await fetch(`https://api.jsonbin.io/v3/b/${cfg.binId}`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Master-Key': cfg.masterKey,
-      },
+      headers: { 'Content-Type': 'application/json', 'X-Master-Key': cfg.masterKey },
       body: JSON.stringify(db)
     });
     if (!res.ok) throw new Error('JSONBin save failed: ' + res.status);
     return res;
   }, 'Save');
 }
-
-// Local cache
 let _db = null;
 function getDB() { return _db || {}; }
-
-// localStorage cache: avoids an API read on every page load.
-// 15-minute TTL. Manual refresh clears it. safeMutate updates it after writes.
-const _CACHE_KEY = 'wc2026_db_cache';
+const _CACHE_KEY = 'epl2627_db_cache';
 const _CACHE_TTL = 15 * 60 * 1000;
 function _readCache() {
   try {
@@ -1426,203 +1514,52 @@ function _readCache() {
     return data;
   } catch { return null; }
 }
-function _writeCache(data) {
-  try { localStorage.setItem(_CACHE_KEY, JSON.stringify({ ts: Date.now(), data })); } catch {}
-}
-function _clearCache() {
-  try { localStorage.removeItem(_CACHE_KEY); } catch {}
-}
-
+function _writeCache(data) { try { localStorage.setItem(_CACHE_KEY, JSON.stringify({ ts: Date.now(), data })); } catch {} }
+function _clearCache() { try { localStorage.removeItem(_CACHE_KEY); } catch {} }
 async function loadDB(skipCache) {
-  if (!skipCache) {
-    const cached = _readCache();
-    if (cached) { _db = cached; return _db; }
-  }
+  if (!skipCache) { const cached = _readCache(); if (cached) { _db = cached; return _db; } }
   _db = await fetchDB();
   if (_db) _writeCache(_db);
   return _db;
 }
 async function persistDB() { await saveDB(_db); }
 
-// ─── CONCURRENCY-SAFE WRITES ─────────────────────────────────────────────────
-// JSONBin stores one JSON blob with no per-key writes or locking. To avoid one
-// player's save overwriting another's, every mutation re-fetches the latest DB,
-// applies ONLY its own change to that fresh copy, then writes. This shrinks the
-// collision window to the few hundred ms between fetch and PUT. A mutex prevents
-// this tab's own concurrent writes from racing each other.
 let _writeChain = Promise.resolve();
 function safeMutate(mutator) {
-  // Queue writes from this tab so they run one at a time
   const run = _writeChain.then(async () => {
-    const fresh = await fetchDB();          // latest from server
+    const fresh = await fetchDB();
     const merged = fresh && typeof fresh === 'object' ? fresh : {};
     if (!merged.players) merged.players = {};
     if (!merged.predictions) merged.predictions = {};
     if (!merged.results) merged.results = {};
-    if (!merged.teamOverrides) merged.teamOverrides = {};
     if (!merged.settings) merged.settings = {};
-    mutator(merged);                         // apply only our change
-    await saveDB(merged);                    // write merged result
-    _db = merged;                            // refresh local cache
-    _writeCache(merged);                     // update localStorage cache
+    if (!merged.overrides) merged.overrides = {};
+    if (!merged.bankerPick) merged.bankerPick = {};
+    mutator(merged);
+    await saveDB(merged);
+    _db = merged;
+    _writeCache(merged);
     return merged;
   });
-  // Keep the chain alive even if one write fails
   _writeChain = run.catch(() => {});
   return run;
 }
 
-
-// ─── SESSION ─────────────────────────────────────────────────────────────────
+// ─── SESSION / AUTH ───────────────────────────────────────────────────────────
 let currentUser = null;
-function getSession() {
-  const s = sessionStorage.getItem(SESSION_KEY);
-  return s ? JSON.parse(s) : null;
+function getSession() { try { return JSON.parse(localStorage.getItem(SESSION_KEY)); } catch { return null; } }
+function setSession(user) { localStorage.setItem(SESSION_KEY, JSON.stringify(user)); }
+function clearSession() { localStorage.removeItem(SESSION_KEY); }
+function isAdmin() { return !!(currentUser && currentUser.isAdmin); }
+function normName(name) { return name.trim().toLowerCase().replace(/\s+/g, '_'); }
+function initials(name) { return name.split(/[\s_]+/).map(w=>w[0]||'').join('').toUpperCase().slice(0,2); }
+function hashPin(pin) {
+  let h = 0;
+  for (let i=0;i<pin.length;i++) { h = ((h<<5)-h) + pin.charCodeAt(i); h |= 0; }
+  return 'p' + Math.abs(h).toString(36) + pin.length;
 }
-function setSession(user) {
-  currentUser = user;
-  sessionStorage.setItem(SESSION_KEY, JSON.stringify(user));
-}
-function clearSession() {
-  currentUser = null;
-  sessionStorage.removeItem(SESSION_KEY);
-}
-function isAdmin() {
-  return currentUser && currentUser.isAdmin;
-}
+function escapeHtml(str) { return String(str).replace(/'/g,"&#39;").replace(/"/g,"&quot;"); }
 
-// ─── INIT ─────────────────────────────────────────────────────────────────────
-window.addEventListener('DOMContentLoaded', async () => {
-  const cfg = getConfig();
-  if (!cfg) {
-    show('loadingScreen', false);
-    show('setupScreen', true);
-    return;
-  }
-  try {
-    await loadDB();
-    const db = getDB();
-    const sess = getSession();
-    if (sess) {
-      // Validate session still valid
-      if (db.players && db.players[sess.name]) {
-        currentUser = sess;
-        bootApp();
-        return;
-      }
-    }
-    // If the bin has no players yet, it needs first-time initialisation
-    // (create the admin). Otherwise go straight to sign in.
-    if (!db.players || Object.keys(db.players).length === 0) {
-      show('loadingScreen', false);
-      // If credentials are embedded, pre-fill them so the admin only sets name + PIN
-      if (EMBEDDED_CONFIG.masterKey && EMBEDDED_CONFIG.binId) {
-        document.getElementById('setupMasterKey').value = EMBEDDED_CONFIG.masterKey;
-        document.getElementById('setupBinId').value = EMBEDDED_CONFIG.binId;
-      }
-      show('setupScreen', true);
-      return;
-    }
-    show('loadingScreen', false);
-    show('authScreen', true);
-  } catch(e) {
-    show('loadingScreen', false);
-    showToast('Could not connect to JSONBin. Check your credentials.', 'error');
-    show('setupScreen', true);
-  }
-});
-
-function show(id, visible) {
-  document.getElementById(id).style.display = visible ? 'block' : 'none';
-}
-
-function bootApp() {
-  show('loadingScreen', false);
-  show('authScreen', false);
-  show('setupScreen', false);
-  show('appScreen', true);
-  // Apply any stored knockout team name overrides
-  const db = getDB();
-  if (db.teamOverrides) {
-    MATCHES.forEach(m => {
-      if (db.teamOverrides[m.id + '_h'] !== undefined) m.home = db.teamOverrides[m.id + '_h'];
-      if (db.teamOverrides[m.id + '_a'] !== undefined) m.away = db.teamOverrides[m.id + '_a'];
-    });
-  }
-  // Header
-  const av = document.getElementById('headerAvatar');
-  av.textContent = initials(currentUser.name);
-  // Explicitly set admin-dependent UI both ways, so logging in as a non-admin
-  // after an admin session does not inherit the previous admin's view.
-  if (currentUser.isAdmin) av.classList.add('admin'); else av.classList.remove('admin');
-  document.getElementById('headerName').textContent = currentUser.name + (currentUser.isAdmin ? ' ★' : '');
-  document.getElementById('adminNavTab').style.display = isAdmin() ? 'block' : 'none';
-  showPage('leaderboard');
-}
-
-// ─── SETUP ───────────────────────────────────────────────────────────────────
-async function runSetup() {
-  const masterKey = document.getElementById('setupMasterKey').value.trim();
-  const binId = document.getElementById('setupBinId').value.trim();
-  const adminName = document.getElementById('setupAdminName').value.trim();
-  const adminPin = document.getElementById('setupAdminPin').value.trim();
-  const err = document.getElementById('setupError');
-  err.style.display = 'none';
-
-  if (!masterKey || !binId || !adminName || !adminPin) {
-    err.textContent = 'All fields required.'; err.style.display = 'block'; return;
-  }
-  if (adminPin.length < 4) {
-    err.textContent = 'PIN must be at least 4 digits.'; err.style.display = 'block'; return;
-  }
-
-  document.getElementById('setupBtn').disabled = true;
-  document.getElementById('setupBtn').textContent = 'Connecting...';
-
-  try {
-    // Test connection and read what's already in the bin
-    const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
-      headers: { 'X-Master-Key': masterKey }
-    });
-    if (!res.ok) throw new Error('Bad credentials or bin ID');
-    const existing = await res.json();
-    const record = (existing && existing.record) || {};
-
-    // Save config to this browser
-    _config = { masterKey, binId };
-    localStorage.setItem(CONFIG_KEY, JSON.stringify(_config));
-
-    // If the bin already has players, this is an EXISTING competition.
-    // Do NOT wipe it. Just connect this browser and send them to sign in.
-    if (record.players && Object.keys(record.players).length > 0) {
-      _db = record;
-      show('setupScreen', false);
-      show('authScreen', true);
-      showToast('Connected to your existing competition. Please sign in.', 'success');
-      document.getElementById('setupBtn').disabled = false;
-      document.getElementById('setupBtn').textContent = 'INITIALISE APP';
-      return;
-    }
-
-    // Fresh, empty bin: initialise it with this admin
-    const db = { players: {}, predictions: {}, results: {}, teamOverrides: {}, settings: {} };
-    const adminKey = normName(adminName);
-    db.players[adminKey] = { name: adminName, pin: hashPin(adminPin), isAdmin: true, joined: Date.now() };
-    _db = db;
-    await persistDB();
-
-    // Login as admin
-    setSession({ name: adminKey, displayName: adminName, isAdmin: true });
-    currentUser = getSession();
-    bootApp();
-  } catch(e) {
-    err.textContent = 'Connection failed: ' + e.message; err.style.display = 'block';
-    document.getElementById('setupBtn').disabled = false;
-    document.getElementById('setupBtn').textContent = 'INITIALISE APP';
-  }
-}
-
-// ─── AUTH ─────────────────────────────────────────────────────────────────────
 function switchAuthTab(tab) {
   document.getElementById('tabLogin').classList.toggle('active', tab==='login');
   document.getElementById('tabReg').classList.toggle('active', tab==='register');
@@ -1630,240 +1567,258 @@ function switchAuthTab(tab) {
   document.getElementById('registerForm').style.display = tab==='register' ? 'block' : 'none';
   document.getElementById('authError').style.display = 'none';
 }
-
 async function doLogin() {
   const name = document.getElementById('loginName').value.trim();
-  const pin = document.getElementById('loginPin').value.trim();
-  const err = document.getElementById('authError');
-  err.style.display = 'none';
-  if (!name || !pin) { err.textContent = 'Enter your name and PIN.'; err.style.display = 'block'; return; }
-  const db = getDB();
+  const pin = document.getElementById('loginPin').value;
+  const errEl = document.getElementById('authError');
+  errEl.style.display = 'none';
+  if (!name || !pin) { errEl.textContent = 'Enter your name and PIN.'; errEl.style.display='block'; return; }
+  const db = await loadDB(true);
   const key = normName(name);
-  const player = db.players && db.players[key];
-  if (!player) { err.textContent = 'Player not found. Try registering.'; err.style.display = 'block'; return; }
-  if (player.pin !== hashPin(pin)) { err.textContent = 'Incorrect PIN.'; err.style.display = 'block'; return; }
-  setSession({ name: key, displayName: player.name, isAdmin: !!player.isAdmin });
-  bootApp();
+  const player = db && db.players && db.players[key];
+  if (!player || player.pin !== hashPin(pin)) { errEl.textContent = 'Name or PIN not recognised.'; errEl.style.display='block'; return; }
+  setSession({ name: player.name, key });
+  currentUser = { name: player.name, key, isAdmin: !!player.isAdmin };
+  bootAppScreen();
 }
-
 async function doRegister() {
   const name = document.getElementById('regName').value.trim();
-  const pin = document.getElementById('regPin').value.trim();
-  const pin2 = document.getElementById('regPin2').value.trim();
-  const err = document.getElementById('authError');
-  err.style.display = 'none';
-  if (!name || !pin) { err.textContent = 'All fields required.'; err.style.display = 'block'; return; }
-  if (pin.length < 4) { err.textContent = 'PIN must be at least 4 characters.'; err.style.display = 'block'; return; }
-  if (pin !== pin2) { err.textContent = 'PINs do not match.'; err.style.display = 'block'; return; }
+  const pin = document.getElementById('regPin').value;
+  const pin2 = document.getElementById('regPin2').value;
+  const errEl = document.getElementById('authError');
+  errEl.style.display = 'none';
+  if (!name || name.length < 2) { errEl.textContent = 'Enter your full name.'; errEl.style.display='block'; return; }
+  if (!pin || pin.length < 4) { errEl.textContent = 'PIN must be at least 4 digits.'; errEl.style.display='block'; return; }
+  if (pin !== pin2) { errEl.textContent = "PINs don't match."; errEl.style.display='block'; return; }
   const key = normName(name);
-  if (getDB().players && getDB().players[key]) { err.textContent = 'That name is already taken.'; err.style.display = 'block'; return; }
   let taken = false;
   try {
     await safeMutate(db => {
-      if (db.players[key]) { taken = true; return; } // someone grabbed it in the meantime
+      if (db.players[key]) { taken = true; return; }
       db.players[key] = { name, pin: hashPin(pin), isAdmin: false, joined: Date.now() };
     });
-  } catch(e) {
-    err.textContent = 'Registration failed. Check your connection and try again.'; err.style.display = 'block'; return;
+  } catch(e) { errEl.textContent = 'Registration failed, try again.'; errEl.style.display='block'; return; }
+  if (taken) { errEl.textContent = 'That name is already registered.'; errEl.style.display='block'; return; }
+  setSession({ name, key });
+  currentUser = { name, key, isAdmin: false };
+  bootAppScreen();
+}
+function doLogout() { clearSession(); currentUser = null; location.reload(); }
+
+async function runSetup() {
+  const masterKey = document.getElementById('setupMasterKey').value.trim();
+  const binId = document.getElementById('setupBinId').value.trim();
+  const adminName = document.getElementById('setupAdminName').value.trim();
+  const adminPin = document.getElementById('setupAdminPin').value;
+  const errEl = document.getElementById('setupError');
+  errEl.style.display = 'none';
+  if (!masterKey || !binId || !adminName || !adminPin || adminPin.length < 4) {
+    errEl.textContent = 'Fill in every field (PIN 4+ digits).'; errEl.style.display='block'; return;
   }
-  if (taken) { err.textContent = 'That name was just taken. Pick another.'; err.style.display = 'block'; return; }
-  setSession({ name: key, displayName: name, isAdmin: false });
-  bootApp();
+  _config = { masterKey, binId };
+  localStorage.setItem(CONFIG_KEY, JSON.stringify(_config));
+  try {
+    const db = await fetchDB();
+    const merged = db && typeof db === 'object' ? db : {};
+    if (!merged.players) merged.players = {};
+    const adminKey = normName(adminName);
+    merged.players[adminKey] = { name: adminName, pin: hashPin(adminPin), isAdmin: true, joined: Date.now() };
+    if (!merged.predictions) merged.predictions = {};
+    if (!merged.results) merged.results = {};
+    if (!merged.settings) merged.settings = {};
+    if (!merged.overrides) merged.overrides = {};
+    if (!merged.bankerPick) merged.bankerPick = {};
+    await saveDB(merged);
+    _db = merged; _writeCache(merged);
+    setSession({ name: adminName, key: adminKey });
+    currentUser = { name: adminName, key: adminKey, isAdmin: true };
+    bootAppScreen();
+  } catch(e) {
+    errEl.textContent = 'Could not reach JSONBin. Check your credentials.'; errEl.style.display='block';
+  }
 }
 
-function doLogout() {
-  clearSession();
-  show('appScreen', false);
-  show('authScreen', true);
-  document.getElementById('loginName').value = '';
-  document.getElementById('loginPin').value = '';
+// ─── BOOT ─────────────────────────────────────────────────────────────────────
+function show(id, visible) { document.getElementById(id).style.display = visible ? 'block' : 'none'; }
+async function bootApp() {
+  const cfg = getConfig();
+  if (!cfg) {
+    if (EMBEDDED_CONFIG.masterKey && EMBEDDED_CONFIG.binId) {
+      document.getElementById('setupMasterKey').value = EMBEDDED_CONFIG.masterKey;
+      document.getElementById('setupBinId').value = EMBEDDED_CONFIG.binId;
+    }
+    show('loadingScreen', false); show('setupScreen', true); return;
+  }
+  await loadDB();
+  const sess = getSession();
+  if (sess) {
+    const db = getDB();
+    if (db.players && db.players[sess.key || normName(sess.name)]) {
+      const p = db.players[sess.key || normName(sess.name)];
+      currentUser = { name: p.name, key: sess.key || normName(sess.name), isAdmin: !!p.isAdmin };
+      bootAppScreen(); return;
+    }
+  }
+  show('loadingScreen', false); show('authScreen', true);
 }
-
-// ─── PAGES ───────────────────────────────────────────────────────────────────
-let currentPage = 'leaderboard';
-
-// Scroll to the first upcoming match anchor. Only called on page navigation,
-// not on filter/sort changes, so the user's scroll position is preserved when filtering.
-function scrollToUpcoming() {
-  requestAnimationFrame(() => {
-    const el = document.getElementById('upcomingAnchor');
-    if (el) el.scrollIntoView({ behavior: 'instant', block: 'start' });
-  });
+function bootAppScreen() {
+  show('loadingScreen', false); show('setupScreen', false); show('authScreen', false); show('appScreen', true);
+  document.getElementById('headerName').textContent = currentUser.name;
+  document.getElementById('headerAvatar').textContent = initials(currentUser.name);
+  document.getElementById('headerAvatar').classList.toggle('admin', currentUser.isAdmin);
+  document.getElementById('adminNavTab').style.display = isAdmin() ? 'block' : 'none';
+  showPage('leaderboard');
+  setInterval(tickCountdowns, 1000);
 }
+window.addEventListener('DOMContentLoaded', bootApp);
 
+// ─── NAV ──────────────────────────────────────────────────────────────────────
 function showPage(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('page-' + page).classList.add('active');
-  // activate nav tab
+  const idx = ['leaderboard','predictions','schedule','admin'].indexOf(page);
   const tabs = document.querySelectorAll('.nav-tab');
-  tabs.forEach(t => { if (t.textContent.toLowerCase().includes(page.split('').slice(0,4).join(''))) t.classList.add('active'); });
-  currentPage = page;
+  if (tabs[idx]) tabs[idx].classList.add('active');
   if (page === 'leaderboard') renderLeaderboard();
-  if (page === 'predictions') { renderPredictions(); scrollToUpcoming(); }
-  if (page === 'schedule') { renderSchedule(); scrollToUpcoming(); }
-  if (page === 'admin') { renderAdmin(); scrollToAdminAnchor(); }
+  if (page === 'predictions') renderPredictions();
+  if (page === 'schedule') renderSchedule();
+  if (page === 'admin') renderAdmin();
+}
+async function refreshLeaderboard() {
+  const btn = document.getElementById('refreshBtn');
+  btn.classList.add('spinning'); btn.textContent = '...';
+  _clearCache();
+  await loadDB(true);
+  renderLeaderboard();
+  btn.classList.remove('spinning'); btn.textContent = 'Refresh';
 }
 
-// ─── LEADERBOARD ─────────────────────────────────────────────────────────────
-// Number of matches whose prediction window has opened (group = all; knockout = only unlocked rounds)
-function predictableMatchCount() {
-  const db = getDB();
-  return MATCHES.filter(m => {
-    if (!m.phase || !KO_PHASES.includes(m.phase)) return true; // group stage always counts
-    return db.settings && db.settings[koUnlockKey(m.phase)] === true; // knockout only if round unlocked
-  }).length;
+// ─── GAMEWEEK PICKER (shared) ─────────────────────────────────────────────────
+function renderGwPicker(elId, selected, onClick) {
+  const gws = allGws();
+  const el = document.getElementById(elId);
+  el.innerHTML = gws.map(gw => `<div class="gw-pill ${gw===selected?'active':''} ${isTestGw(gw)?'test':''}" data-gw="${gw}">GW${gw}${isTestGw(gw)?'<span class="gw-sub">test</span>':''}</div>`).join('');
+  el.querySelectorAll('.gw-pill').forEach(pill => { pill.onclick = () => onClick(Number(pill.getAttribute('data-gw'))); });
 }
 
+// ─── COUNTDOWN ────────────────────────────────────────────────────────────────
+function tickCountdowns() {
+  document.querySelectorAll('.countdown[data-deadline]').forEach(el => {
+    const ms = parseInt(el.getAttribute('data-deadline')) - Date.now();
+    el.textContent = ms <= 0 ? 'closing' : fmtCountdown(ms);
+  });
+}
+function fmtCountdown(ms) {
+  const s = Math.floor(ms/1000), d = Math.floor(s/86400), h = Math.floor((s%86400)/3600), m = Math.floor((s%3600)/60), sec = s%60;
+  if (d>0) return `⏱ ${d}d ${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m`;
+  if (h>0) return `⏱ ${h}h ${String(m).padStart(2,'0')}m ${String(sec).padStart(2,'0')}s`;
+  return `⏱ ${m}m ${String(sec).padStart(2,'0')}s`;
+}
+
+// ─── LEADERBOARD ──────────────────────────────────────────────────────────────
 function renderLeaderboard() {
   const db = getDB();
-  if (!db.players) return;
-  const players = Object.entries(db.players).map(([key, p]) => {
-    const stats = calcPlayerStats(key);
-    return { key, ...p, ...stats };
-  });
-  players.sort((a,b) => b.pts - a.pts || b.exact - a.exact);
-
-  const completed = MATCHES.filter(m => db.results && db.results[m.id] !== undefined).length;
-  const predictable = predictableMatchCount();
+  const players = Object.entries(db.players || {});
   document.getElementById('statPlayers').textContent = players.length;
-  document.getElementById('statCompleted').textContent = completed;
-  const myStats = calcPlayerStats(currentUser.name);
-  document.getElementById('statYourPts').textContent = myStats.pts;
+  document.getElementById('statGw').textContent = 'GW' + defaultGw();
+  document.getElementById('statCompleted').textContent = Object.keys(db.results||{}).length;
+
+  const rows = players.map(([key, p]) => ({ name: p.name, ...calcPlayerStats(p.name) }))
+    .sort((a,b) => b.pts - a.pts || b.exact - a.exact || a.name.localeCompare(b.name));
+
+  const me = rows.find(r => r.name === currentUser.name);
+  document.getElementById('statYourPts').textContent = me ? me.pts : 0;
+
+  const banner = document.getElementById('lbTestBanner');
+  banner.innerHTML = (GAMEWEEKS[1] && !isTestReset(1))
+    ? `<div class="test-banner">🧪 <strong>Gameweek 1 is a test run.</strong> These standings include it for now. Everything resets to zero before Gameweek 2's deadline (Sat 29 Aug, 18:00 SGT/KL).</div>`
+    : (GAMEWEEKS[1] ? `<div class="test-banner">🧪 Gameweek 1 was a test run. Its points no longer count. The real competition runs from Gameweek 2.</div>` : '');
 
   const body = document.getElementById('leaderboardBody');
-  body.innerHTML = players.map((p, i) => {
-    const isMe = p.key === currentUser.name;
-    const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
-    const behind = predictable - p.predicted;
-    const playedColour = behind === 0 ? 'var(--green)' : behind <= 3 ? 'var(--text2)' : 'var(--accent2)';
-    return `<div class="leaderboard-row ${rankClass} ${isMe ? 'me' : ''}">
+  body.innerHTML = rows.map((r, i) => {
+    const rankClass = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'';
+    const mine = r.name === currentUser.name ? 'me' : '';
+    return `<div class="leaderboard-row ${rankClass} ${mine}">
       <div class="rank-num">${i+1}</div>
-      <div class="player-name">${p.name}${p.isAdmin ? ' <span style="color:var(--accent3);font-size:10px;">★</span>' : ''}${isMe ? '<small>YOU</small>' : ''}</div>
-      <div class="stat-cell" style="color:${playedColour};font-size:12px;">${p.predicted}/${predictable}</div>
-      <div class="stat-cell" style="color:var(--accent3)">${p.exact}</div>
-      <div class="pts-cell">${p.pts}</div>
+      <div class="player-name">${escapeHtml(r.name)}<small>${r.predicted} predicted</small></div>
+      <div class="stat-cell">${r.exact}</div>
+      <div class="stat-cell">${r.bonusPts}</div>
+      <div class="pts-cell">${r.pts}</div>
     </div>`;
-  }).join('');
-}
-
-function calcPlayerStats(playerKey) {
-  const db = getDB();
-  let exact = 0, result = 0, pts = 0;
-  const preds = (db.predictions && db.predictions[playerKey]) || {};
-  const predicted = Object.keys(preds).length;
-  if (!db.results || !db.predictions || !db.predictions[playerKey]) return { exact, result, pts, predicted };
-  Object.entries(db.results).forEach(([matchId, res]) => {
-    const pred = preds[matchId];
-    if (!pred) return;
-    if (pred.home === res.home && pred.away === res.away) { exact++; pts += 3; }
-    else if (Math.sign(pred.home - pred.away) === Math.sign(res.home - res.away)) { result++; pts += 1; }
-  });
-  return { exact, result, pts, predicted };
+  }).join('') || '<div style="color:var(--text3);font-size:13px;padding:20px 0;">No players yet.</div>';
 }
 
 // ─── PREDICTIONS ─────────────────────────────────────────────────────────────
-// Returns a date header label in AET, e.g. "Thu 12 Jun", "Today, Thu 12 Jun", "Tomorrow, Thu 12 Jun"
-function matchDateLabel(utcStr) {
-  const d = new Date(utcStr);
-  const fmtDate = (dt) => dt.toLocaleDateString('en-GB', { timeZone: 'Australia/Sydney', day: '2-digit', month: '2-digit', year: 'numeric' });
-  const aetDate = fmtDate(d);
-  const now = new Date();
-  const todayAET = fmtDate(now);
-  const tmrwAET = fmtDate(new Date(now.getTime() + 86400000));
-  const dayLabel = d.toLocaleString('en-GB', { timeZone: 'Australia/Sydney', weekday: 'short', day: 'numeric', month: 'short' });
-  if (aetDate === todayAET) return 'Today, ' + dayLabel;
-  if (aetDate === tmrwAET) return 'Tomorrow, ' + dayLabel;
-  return dayLabel;
-}
-
-let predFilter = 'all';
-let predSort = 'date';
-
-function setPredFilter(el, val) {
-  predFilter = val;
-  document.querySelectorAll('#predFilterRow .filter-btn').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
-  renderPredictions();
-}
-
-function setPredSort(val) {
-  predSort = val;
-  document.getElementById('predSortDate').classList.toggle('active', val === 'date');
-  document.getElementById('predSortGroup').classList.toggle('active', val === 'group');
-  renderPredictions();
-}
-
+let selectedGw = null;
 function renderPredictions() {
+  if (selectedGw === null || !allGws().includes(selectedGw)) selectedGw = defaultGw();
+  renderGwPicker('gwPicker', selectedGw, (gw) => { selectedGw = gw; renderPredictions(); });
+
+  const banner = document.getElementById('predTestBanner');
+  if (isTestGw(selectedGw) && !isTestReset(selectedGw)) {
+    banner.innerHTML = `<div class="test-banner">🧪 <strong>Gameweek 1 is a test run.</strong> Predict as normal so you can try the app out. The leaderboard resets to zero before Gameweek 2's deadline, so nothing here counts long-term (and using a banker this week won't use one of your 8 for the season).</div>`;
+  } else if (isTestGw(selectedGw) && isTestReset(selectedGw)) {
+    banner.innerHTML = `<div class="test-banner">🧪 Gameweek 1 was the test run. Its points no longer count. The real competition started at Gameweek 2.</div>`;
+  } else { banner.innerHTML = ''; }
+
+  const dl = gwDeadlineMs(selectedGw);
+  const locked = isGwLocked(selectedGw);
+  const remaining = bankersRemaining(currentUser.name);
+  document.getElementById('deadlineStrip').innerHTML = `
+    <div class="deadline-label">${locked ? 'Locked since' : 'Deadline'} <b>${fmtDeadline(dl)}</b></div>
+    ${!locked ? `<span class="countdown" data-deadline="${dl}">${fmtCountdown(dl-Date.now())}</span>` : ''}
+    <div class="banker-toggle-wrap"><span class="banker-count">${isTestGw(selectedGw) ? "test gameweek, free banker, doesn't use an allowance" : remaining + ' of 8 bankers left this season'}</span></div>
+  `;
+
   const db = getDB();
   const myPreds = (db.predictions && db.predictions[currentUser.name]) || {};
-  let matches = [...MATCHES];
-  if (predFilter === 'open') matches = matches.filter(m => !isLocked(m));
-  if (predFilter === 'locked') matches = matches.filter(m => isLocked(m));
-  if (predFilter === 'predicted') matches = matches.filter(m => myPreds[m.id]);
-
-  const container = document.getElementById('predictionsList');
-  const now = new Date();
+  const gwMatches = MATCHES.filter(m => m.gw === selectedGw).map(effectiveMatch).sort((a,b)=> new Date(a.utc)-new Date(b.utc));
   let html = '';
-
-  if (predSort === 'date') {
-    // All matches in chronological order. Insert scroll anchor before first upcoming match.
-    const sorted = matches.sort((a, b) => new Date(a.utc) - new Date(b.utc));
-    let lastKey = null;
-    let anchored = false;
-    sorted.forEach(m => {
-      const label = matchDateLabel(m.utc);
-      if (!anchored && new Date(m.utc) > now) {
-        html += '<div id="upcomingAnchor" style="scroll-margin-top:64px;"></div>';
-        anchored = true;
-      }
-      if (label !== lastKey) { html += `<div class="group-label">${label}</div>`; lastKey = label; }
-      html += renderMatchCard(m, myPreds[m.id], db.results && db.results[m.id], true);
-    });
-    if (!html) html = '<div style="color:var(--text3);font-size:13px;padding:20px 0;">No matches in this view.</div>';
-  } else {
-    // Group sort: existing behaviour unchanged
-    let lastKey = null;
-    matches.forEach(m => {
-      const label = m.phase === 'Group Stage' ? `Group ${m.group}` : m.phase;
-      if (label !== lastKey) { html += `<div class="group-label">${label}</div>`; lastKey = label; }
-      html += renderMatchCard(m, myPreds[m.id], db.results && db.results[m.id], true);
-    });
-    if (!html) html = '<div style="color:var(--text3);font-size:13px;padding:20px 0;">No matches in this view.</div>';
-  }
-
-  container.innerHTML = html;
+  gwMatches.forEach(m => { html += renderMatchCard(m, myPreds[m.id], db.results && db.results[m.id], true); });
+  document.getElementById('predictionsList').innerHTML = html || '<div style="color:var(--text3);font-size:13px;padding:20px 0;">No matches loaded for this gameweek yet.</div>';
 }
 
 function renderMatchCard(m, pred, result, showPredInput) {
-  const locked = isLocked(m);
-  const koGated = m.phase && KO_PHASES.includes(m.phase) && !(getDB().settings && getDB().settings[koUnlockKey(m.phase)] === true);
-  const tz = utcToZones(m.utc);
-  const statusClass = result ? 'final' : locked ? 'locked' : 'open';
-  const badgeText = result ? 'Final' : koGated ? 'Round locked' : locked ? 'Locked' : 'Open';
-  const badgeClass = result ? 'badge-final' : koGated ? 'badge-soon' : locked ? 'badge-locked' : 'badge-open';
+  const postponed = isPostponed(m);
+  const excludedFriday = m.reason === 'friday' && !m.inComp;
+  const locked = isGwLocked(m.gw);
+  const gwTest = isTestGw(m.gw);
 
-  let vsContent = result
-    ? `${result.home} - ${result.away}`
-    : (pred ? `${pred.home}-${pred.away}` : 'v');
+  let statusClass = 'open', badgeText = 'Open', badgeClass = 'badge-open';
+  if (postponed) { statusClass='postponed'; badgeText='Postponed'; badgeClass='badge-postponed'; }
+  else if (!m.inComp) { statusClass='excluded'; badgeText = excludedFriday ? 'Friday, excluded' : 'Not in comp'; badgeClass='badge-excluded'; }
+  else if (result) { statusClass='final'; badgeText='Final'; badgeClass='badge-final'; }
+  else if (locked) { statusClass='locked'; badgeText='Locked'; badgeClass='badge-locked'; }
+
+  const tagBadge = m.tag === 'anchor' ? '<span class="match-badge badge-anchor">Anchor</span>'
+                  : m.tag === 'wildcard' ? '<span class="match-badge badge-wildcard">Wildcard</span>' : '';
+
+  const vsContent = result ? `${result.home} - ${result.away}` : (pred ? `${pred.home}-${pred.away}` : 'v');
+  const db = getDB();
+  const isBanker = !!(db.bankerPick && db.bankerPick[currentUser.name] && db.bankerPick[currentUser.name][m.gw] === m.id);
 
   let predSection = '';
-  if (showPredInput) {
+  if (showPredInput && m.inComp && !postponed) {
     if (result) {
-      const pts = pred ? calcPredPts(pred, result) : null;
-      predSection = `<div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+      const calc = pred ? calcMatchPts(m, pred, result) : null;
+      let bonusHtml = '';
+      if (calc) {
+        const chips = calc.bonuses.map(b => `<span class="bonus-chip chip-${b.key==='goalfest'?'goalfest':b.key==='upset'?'upset':'draw'}">${b.label} +${b.pts}</span>`);
+        if (isBanker) chips.push('<span class="bonus-chip chip-banker">★ Banker ×2</span>');
+        if (chips.length) bonusHtml = `<div class="bonus-chips">${chips.join('')}</div>`;
+      }
+      predSection = `<div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap;">
         <span class="pred-label">Your prediction:</span>
         <span style="font-family:'DM Mono',monospace;font-size:13px;color:${pred?'var(--text)':'var(--text3)'};">${pred ? `${pred.home} - ${pred.away}` : 'No prediction'}</span>
-        ${pts !== null ? `<span style="margin-left:auto;font-family:'DM Mono',monospace;font-size:12px;color:${pts===3?'var(--accent3)':pts===1?'var(--green)':'var(--text3)'};">${pts===3?'★ 3pts':pts===1?'✓ 1pt':'0pts'}</span>` : ''}
-      </div>`;
+        ${calc ? `<span style="margin-left:auto;font-family:'DM Mono',monospace;font-size:12px;color:${calc.exact?'var(--accent3)':calc.correctResult?'var(--green)':'var(--text3)'};">${isBanker?calc.total*2:calc.total} pts</span>` : ''}
+      </div>${bonusHtml}`;
     } else if (locked) {
-      const lockMsg = koGated
-        ? 'Predictions open once the admin confirms the teams for this round.'
-        : (pred ? `Your prediction: ${pred.home} - ${pred.away}` : 'No prediction entered before lock.');
-      predSection = `<div class="pred-locked-text">${lockMsg}</div>`;
+      predSection = `<div class="pred-locked-text">${pred ? `Your prediction: ${pred.home} - ${pred.away}` : 'No prediction entered before lock.'}${isBanker?'. This was your banker.':''}</div>`;
     } else {
-      const ph = pred ? pred.home : '';
-      const pa = pred ? pred.away : '';
+      const ph = pred ? pred.home : '', pa = pred ? pred.away : '';
+      const remaining = bankersRemaining(currentUser.name);
+      const bankerDisabled = !isBanker && !gwTest && remaining <= 0;
       predSection = `<div class="pred-row">
         <span class="pred-label">Predict:</span>
         <div class="score-input-group">
@@ -1872,60 +1827,62 @@ function renderMatchCard(m, pred, result, showPredInput) {
           <input class="score-input" type="number" min="0" max="99" value="${pa}" id="pa_${m.id}" onchange="autoSave('${m.id}')">
         </div>
         <button class="btn-save" onclick="savePred('${m.id}')">Save</button>
+        <button class="btn-banker ${isBanker?'active':''}" ${bankerDisabled?'disabled':''} onclick="toggleBanker('${m.id}', ${m.gw})">${isBanker?'Banker set':'Set banker'}</button>
         ${pred ? `<span class="pred-saved" id="saved_${m.id}">Saved</span>` : `<span class="pred-saved" style="display:none" id="saved_${m.id}">Saved</span>`}
       </div>`;
     }
+  } else if (postponed) {
+    predSection = `<div class="pred-locked-text">Postponed. Excluded from scoring and from this gameweek's Perfect Gameweek bonus.</div>`;
+  } else if (excludedFriday) {
+    predSection = `<div class="pred-locked-text">Friday night UK kick-off. Excluded from the comp this gameweek.</div>`;
+  } else if (!m.inComp) {
+    predSection = `<div class="pred-locked-text">Not part of this gameweek's shortlist.</div>`;
   }
 
-  // Show everyone's picks on My Predictions page once time-locked
-  const timeLocked = new Date() >= new Date(new Date(m.utc).getTime() - 60*60*1000);
-  const picksSection = showPredInput && timeLocked ? renderPicksSection(m, timeLocked, result) : '';
+  const picksSection = showPredInput && locked && m.inComp && !postponed ? renderPicksSection(m) : '';
+  const tz = utcToZones(m.utc);
+  const homeClub = CLUBS[m.home] || {}, awayClub = CLUBS[m.away] || {};
 
-  return `<div class="match-card ${statusClass}" id="card_${m.id}">
+  return `<div class="match-card ${statusClass} ${isBanker?'is-banker':''}" id="card_${m.id}">
     <div class="match-top">
       <div class="match-teams">
-        <span class="team-name">${teamNameOnly(m.home)}</span>
-        <div class="vs-group">
-          <span class="vs-flag">${teamFlag(m.home)}</span>
-          <div class="vs-box ${result ? 'final' : ''}">${vsContent}</div>
-          <span class="vs-flag">${teamFlag(m.away)}</span>
-        </div>
-        <span class="team-name right">${teamNameOnly(m.away)}</span>
+        <span class="team-badge" style="background:${homeClub.color||'#555'}">${homeClub.code||''}</span>
+        <span class="team-name">${escapeHtml(m.home)}</span>
+        <div class="vs-box ${result?'final':''}">${vsContent}</div>
+        <span class="team-name right">${escapeHtml(m.away)}</span>
+        <span class="team-badge" style="background:${awayClub.color||'#555'}">${awayClub.code||''}</span>
       </div>
     </div>
     <div class="match-meta">
       <span class="match-badge ${badgeClass}">${badgeText}</span>
-      ${countdownHtml(m)}
+      ${tagBadge}
     </div>
     <div class="tz-stack">
-      <span class="tz-line"><b>AET</b> ${tz.aet}</span>
-      <span class="tz-line"><b>KL</b> ${tz.kl}</span>
-      <span class="tz-line"><b>BST</b> ${tz.bst}</span>
+      <span class="tz-line"><b>SGT</b> ${tz.sgt} &nbsp;&nbsp; <b>UK</b> ${tz.uk}</span>
     </div>
     ${predSection}
     ${picksSection}
   </div>`;
 }
 
-function calcPredPts(pred, result) {
-  if (pred.home === result.home && pred.away === result.away) return 3;
-  if (Math.sign(pred.home - pred.away) === Math.sign(result.home - result.away)) return 1;
-  return 0;
+function renderPicksSection(m) {
+  const db = getDB();
+  const preds = db.predictions || {};
+  const rows = Object.entries(preds).filter(([,p]) => p[m.id]).map(([player,p]) => {
+    const pr = p[m.id];
+    return `<div class="pick-row ${player===currentUser.name?'pick-me':''}"><span class="pick-name">${escapeHtml(player)}</span><span class="pick-score">${pr.home}-${pr.away}</span></div>`;
+  });
+  if (!rows.length) return '';
+  return `<details class="picks-details"><summary class="picks-summary">See everyone's picks (${rows.length})</summary><div class="picks-list">${rows.join('')}</div></details>`;
 }
 
 async function savePred(matchId) {
-  const hEl = document.getElementById('ph_' + matchId);
-  const aEl = document.getElementById('pa_' + matchId);
+  const hEl = document.getElementById('ph_' + matchId), aEl = document.getElementById('pa_' + matchId);
   if (!hEl || !aEl) return;
-  const home = parseInt(hEl.value);
-  const away = parseInt(aEl.value);
-  if (isNaN(home) || isNaN(away) || home < 0 || away < 0) {
-    showToast('Enter valid scores (0-99)', 'error'); return;
-  }
+  const home = parseInt(hEl.value), away = parseInt(aEl.value);
+  if (isNaN(home) || isNaN(away) || home < 0 || away < 0) { showToast('Enter valid scores (0-99)', 'error'); return; }
   const match = MATCHES.find(m => m.id === matchId);
-  if (isLocked(match)) {
-    showToast('This match is locked.', 'error'); return;
-  }
+  if (!match || isLocked(match)) { showToast('This gameweek is locked.', 'error'); return; }
   const playerKey = currentUser.name;
   try {
     await safeMutate(db => {
@@ -1935,547 +1892,242 @@ async function savePred(matchId) {
     const el = document.getElementById('saved_' + matchId);
     if (el) { el.style.display = 'inline'; el.textContent = 'Saved ✓'; }
     showToast('Prediction saved', 'success');
-  } catch(e) {
-    showToast('Save failed. Try again.', 'error');
-  }
+  } catch(e) { showToast('Save failed. Try again.', 'error'); }
 }
-
 function autoSave(matchId) {
-  // Debounce save on input change
   clearTimeout(window._saveTimer);
   window._saveTimer = setTimeout(() => savePred(matchId), 1200);
 }
+async function toggleBanker(matchId, gw) {
+  const playerKey = currentUser.name;
+  const db = getDB();
+  const current = db.bankerPick && db.bankerPick[playerKey] && db.bankerPick[playerKey][gw];
+  const turningOff = current === matchId;
+  if (!turningOff && !isTestGw(gw) && bankersRemaining(playerKey) <= 0) { showToast('No bankers left this season', 'error'); return; }
+  try {
+    await safeMutate(db => {
+      if (!db.bankerPick[playerKey]) db.bankerPick[playerKey] = {};
+      if (turningOff) delete db.bankerPick[playerKey][gw];
+      else db.bankerPick[playerKey][gw] = matchId;
+    });
+    showToast(turningOff ? 'Banker removed' : 'Banker set ★', 'success');
+    renderPredictions();
+  } catch(e) { showToast('Failed to update banker', 'error'); }
+}
 
 // ─── SCHEDULE ─────────────────────────────────────────────────────────────────
-let schedFilter = 'all';
-let schedSort = 'date';
-
-function setSchedFilter(el, val) {
-  schedFilter = val;
-  document.querySelectorAll('#schedFilterRow .filter-btn').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
-  renderSchedule();
-}
-
-function setSchedSort(val) {
-  schedSort = val;
-  document.getElementById('schedSortDate').classList.toggle('active', val === 'date');
-  document.getElementById('schedSortGroup').classList.toggle('active', val === 'group');
-  renderSchedule();
-}
-
+let schedSelectedGw = null;
 function renderSchedule() {
+  if (schedSelectedGw === null || !allGws().includes(schedSelectedGw)) schedSelectedGw = defaultGw();
+  renderGwPicker('schedGwPicker', schedSelectedGw, (gw) => { schedSelectedGw = gw; renderSchedule(); });
   const db = getDB();
-  let matches = [...MATCHES];
-  if (schedFilter !== 'all') matches = matches.filter(m => m.phase === schedFilter || (schedFilter === 'Final' && (m.phase === 'Final' || m.phase === '3rd Place')));
-
-  const container = document.getElementById('scheduleList');
-  const now = new Date();
-
-  function buildMatchHtml(m) {
-    const tz = utcToZones(m.utc);
-    const result = db.results && db.results[m.id];
-    const timeLocked = now >= new Date(new Date(m.utc).getTime() - 60*60*1000);
-    return `<div class="match-card">
-      <div class="match-top">
-        <div class="match-teams">
-          <span class="team-name">${teamNameOnly(m.home)}</span>
-          <div class="vs-group">
-            <span class="vs-flag">${teamFlag(m.home)}</span>
-            <div class="vs-box ${result?'final':''}">${result ? `${result.home} - ${result.away}` : 'v'}</div>
-            <span class="vs-flag">${teamFlag(m.away)}</span>
-          </div>
-          <span class="team-name right">${teamNameOnly(m.away)}</span>
-        </div>
-      </div>
-      <div class="match-meta">
-        ${result ? `<span class="match-badge badge-final">Final</span>` : timeLocked ? `<span class="match-badge badge-locked">Locked</span>` : `<span class="match-badge badge-open">Open</span>`}
-        ${countdownHtml(m)}
-      </div>
-      <div class="tz-stack">
-        <span class="tz-line"><b>AET</b> ${tz.aet}</span>
-        <span class="tz-line"><b>KL</b> ${tz.kl}</span>
-        <span class="tz-line"><b>BST</b> ${tz.bst}</span>
-      </div>
-      <div style="font-size:11px;color:var(--text3);margin-top:6px;">${m.venue}</div>
-      ${renderPicksSection(m, timeLocked, result)}
-    </div>`;
-  }
-
+  const matches = MATCHES.filter(m => m.gw === schedSelectedGw).map(effectiveMatch).sort((a,b)=>new Date(a.utc)-new Date(b.utc));
   let html = '';
-
-  if (schedSort === 'date') {
-    // All matches in chronological order. Insert scroll anchor before first upcoming match.
-    const sorted = matches.sort((a, b) => new Date(a.utc) - new Date(b.utc));
-    let lastLabel = null;
-    let anchored = false;
-    sorted.forEach(m => {
-      const label = matchDateLabel(m.utc);
-      if (!anchored && new Date(m.utc) > now) {
-        html += '<div id="upcomingAnchor" style="scroll-margin-top:64px;"></div>';
-        anchored = true;
-      }
-      if (label !== lastLabel) { html += `<div class="group-label">${label}</div>`; lastLabel = label; }
-      html += buildMatchHtml(m);
-    });
-    if (!html) html = '<div style="color:var(--text3);font-size:13px;padding:20px 0;">No matches in this view.</div>';
-  } else {
-    // Group sort: existing behaviour unchanged
-    let lastLabel = null;
-    matches.forEach(m => {
-      const label = m.phase === 'Group Stage' ? `Group ${m.group}` : m.phase;
-      if (label !== lastLabel) { html += `<div class="group-label">${label}</div>`; lastLabel = label; }
-      html += buildMatchHtml(m);
-    });
-    if (!html) html = '<div style="color:var(--text3);font-size:13px;padding:20px 0;">No matches in this view.</div>';
-  }
-
-  container.innerHTML = html;
+  matches.forEach(m => { html += renderMatchCard(m, null, db.results && db.results[m.id], false); });
+  document.getElementById('scheduleList').innerHTML = html;
 }
 
-// Shows everyone's predictions for a match, but ONLY once the match has locked.
-// Before lock, picks stay hidden so nobody can copy. Your own pick always shows.
-function renderPicksSection(m, timeLocked, result) {
-  const db = getDB();
-  const myPred = db.predictions && db.predictions[currentUser.name] && db.predictions[currentUser.name][m.id];
-  if (!timeLocked) {
-    const mine = myPred ? `${myPred.home} - ${myPred.away}` : 'none yet';
-    return `<div class="picks-hidden">Everyone's picks are hidden until predictions lock. Your pick: <strong>${mine}</strong></div>`;
-  }
-  // Locked: reveal all players' picks
-  const rows = Object.entries(db.players || {}).map(([key, p]) => {
-    const pred = db.predictions && db.predictions[key] && db.predictions[key][m.id];
-    const isMe = key === currentUser.name;
-    let scoreTag = '';
-    if (result && pred) {
-      const pts = calcPredPts(pred, result);
-      scoreTag = `<span style="margin-left:auto;font-family:'DM Mono',monospace;font-size:11px;color:${pts===3?'var(--accent3)':pts===1?'var(--green)':'var(--text3)'};">${pts===3?'★3':pts===1?'✓1':'0'}</span>`;
-    }
-    return `<div class="pick-row ${isMe?'pick-me':''}">
-      <span class="pick-name">${p.name}${isMe?' (you)':''}</span>
-      <span class="pick-score">${pred ? `${pred.home} - ${pred.away}` : '<span style="color:var(--text3);">no pick</span>'}</span>
-      ${scoreTag}
-    </div>`;
-  }).join('');
-  return `<details class="picks-details">
-    <summary class="picks-summary">Show everyone's picks</summary>
-    <div class="picks-list">${rows}</div>
-  </details>`;
-}
-
-// ─── ADMIN ───────────────────────────────────────────────────────────────────
+// ─── ADMIN ────────────────────────────────────────────────────────────────────
 function renderAdmin() {
   if (!isAdmin()) return;
   renderAdminMatches();
-  renderKnockoutEditor();
-  renderKnockoutUnlocks();
+  renderKickoffEditor();
   renderAdminPlayers();
 }
-
-function renderKnockoutUnlocks() {
-  const container = document.getElementById('koUnlockList');
-  if (!container) return;
-  const db = getDB();
-  const settings = db.settings || {};
-  container.innerHTML = KO_PHASES.map(phase => {
-    const open = settings[koUnlockKey(phase)] === true;
-    const count = MATCHES.filter(m => m.phase === phase).length;
-    // Count how many fixtures in this round still have placeholder names
-    const placeholders = MATCHES.filter(m => m.phase === phase &&
-      (db.teamOverrides[m.id + '_h'] === undefined || db.teamOverrides[m.id + '_a'] === undefined)).length;
-    return `<div class="player-admin-row">
-      <div style="flex:1;">
-        <div class="player-admin-name">${phase} <span style="color:var(--text3);font-weight:400;font-size:11px;">(${count} matches)</span></div>
-        <div class="player-admin-meta">${open ? '<span style="color:var(--green);">Open for predictions</span>' : '<span style="color:var(--accent2);">Locked</span>'}${placeholders > 0 ? ` &nbsp;|&nbsp; ${placeholders} still have placeholder names` : ' &nbsp;|&nbsp; all teams named'}</div>
-      </div>
-      <button class="${open ? 'btn-danger' : 'btn-confirm'}" onclick="toggleKnockoutRound('${phase.replace(/'/g,"\\'")}', ${!open})">${open ? 'Lock' : 'Open'}</button>
-    </div>`;
-  }).join('');
-}
-
-async function toggleKnockoutRound(phase, openIt) {
-  // Warn if opening a round that still has placeholder team names
-  if (openIt) {
-    const db = getDB();
-    const placeholders = MATCHES.filter(m => m.phase === phase &&
-      (db.teamOverrides[m.id + '_h'] === undefined || db.teamOverrides[m.id + '_a'] === undefined)).length;
-    if (placeholders > 0) {
-      openModal('Open round with placeholders?',
-        `${placeholders} fixture(s) in ${phase} still show placeholder names like "Winner A1". Players will predict against those. Open anyway?`,
-        () => doToggleKnockoutRound(phase, openIt));
-      return;
-    }
-  }
-  doToggleKnockoutRound(phase, openIt);
-}
-
-async function doToggleKnockoutRound(phase, openIt) {
-  try {
-    await safeMutate(db => { db.settings[koUnlockKey(phase)] = openIt; });
-    showToast(`${phase} ${openIt ? 'opened for predictions' : 'locked'}`, 'success');
-    renderKnockoutUnlocks();
-  } catch(e) {
-    showToast('Update failed. Try again.', 'error');
-  }
-}
-
-function renderKnockoutEditor() {
-  const db = getDB();
-  const overrides = db.teamOverrides || {};
-  const q = (document.getElementById('koSearchInput') ? document.getElementById('koSearchInput').value : '').toLowerCase();
-  const koMatches = MATCHES.filter(m => m.phase !== 'Group Stage');
-  const filtered = q
-    ? koMatches.filter(m => {
-        const h = (overrides[m.id + '_h'] || m.home).toLowerCase();
-        const a = (overrides[m.id + '_a'] || m.away).toLowerCase();
-        return h.includes(q) || a.includes(q) || m.phase.toLowerCase().includes(q);
-      })
-    : koMatches;
-
-  const container = document.getElementById('knockoutEditorList');
-  if (!container) return;
-
-  let html = '';
-  let lastPhase = null;
-  filtered.forEach(m => {
-    if (m.phase !== lastPhase) {
-      html += `<div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin:12px 0 6px;padding-top:8px;border-top:1px solid var(--border);">${m.phase}</div>`;
-      lastPhase = m.phase;
-    }
-    const homeVal = overrides[m.id + '_h'] !== undefined ? overrides[m.id + '_h'] : m.home;
-    const awayVal = overrides[m.id + '_a'] !== undefined ? overrides[m.id + '_a'] : m.away;
-    const tz = utcToZones(m.utc);
-    html += `<div class="match-card" style="margin-bottom:8px;">
-      <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">${tz.aet} AET &nbsp;|&nbsp; ${m.venue}</div>
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-        <input class="form-input" style="flex:1;min-width:100px;padding:7px 10px;font-size:13px;" id="ko_h_${m.id}" value="${escapeHtml(homeVal)}" placeholder="Home team">
-        <span style="color:var(--text3);font-family:'DM Mono',monospace;font-size:13px;flex-shrink:0;">v</span>
-        <input class="form-input" style="flex:1;min-width:100px;padding:7px 10px;font-size:13px;" id="ko_a_${m.id}" value="${escapeHtml(awayVal)}" placeholder="Away team">
-        <button class="btn-confirm" style="flex-shrink:0;" onclick="saveKnockoutTeams('${m.id}')">Save</button>
-        ${(overrides[m.id + '_h'] !== undefined || overrides[m.id + '_a'] !== undefined)
-          ? `<button class="btn-warning" style="flex-shrink:0;" onclick="resetKnockoutTeams('${m.id}')">Reset</button>`
-          : ''}
-      </div>
-    </div>`;
-  });
-  if (!html) html = '<div style="color:var(--text3);font-size:13px;padding:10px 0;">No knockout fixtures match your search.</div>';
-  container.innerHTML = html;
-}
-
-async function saveKnockoutTeams(matchId) {
-  const hEl = document.getElementById('ko_h_' + matchId);
-  const aEl = document.getElementById('ko_a_' + matchId);
-  if (!hEl || !aEl) return;
-  const home = hEl.value.trim();
-  const away = aEl.value.trim();
-  if (!home || !away) { showToast('Both team names required', 'error'); return; }
-  try {
-    await safeMutate(db => {
-      db.teamOverrides[matchId + '_h'] = home;
-      db.teamOverrides[matchId + '_a'] = away;
-    });
-    // Update live MATCHES so the rest of the app reflects immediately
-    const match = MATCHES.find(m => m.id === matchId);
-    if (match) { match.home = home; match.away = away; }
-    showToast(`Updated: ${home} v ${away}`, 'success');
-    renderKnockoutEditor();
-  } catch(e) {
-    showToast('Save failed. Try again.', 'error');
-  }
-}
-
-async function resetKnockoutTeams(matchId) {
-  try {
-    await safeMutate(db => {
-      if (db.teamOverrides) {
-        delete db.teamOverrides[matchId + '_h'];
-        delete db.teamOverrides[matchId + '_a'];
-      }
-    });
-    // Restore the original placeholder name in the live MATCHES array
-    const match = MATCHES.find(m => m.id === matchId);
-    if (match) { match.home = match.origHome; match.away = match.origAway; }
-    showToast('Team names reset to placeholder', 'success');
-    renderKnockoutEditor();
-  } catch(e) {
-    showToast('Reset failed', 'error');
-  }
-}
-
+let adminSelectedGw = null;
 function renderAdminMatches() {
+  if (!isAdmin()) return;
+  if (adminSelectedGw === null || !allGws().includes(adminSelectedGw)) adminSelectedGw = defaultGw();
+  renderGwPicker('adminGwPicker', adminSelectedGw, (gw) => { adminSelectedGw = gw; renderAdminMatches(); });
+  const search = (document.getElementById('adminMatchSearch').value||'').toLowerCase();
+  const all = MATCHES.filter(m => m.gw === adminSelectedGw).map(effectiveMatch);
+  const inCompCount = all.filter(m => m.inComp).length;
+  const matches = all.filter(m => !search || m.home.toLowerCase().includes(search) || m.away.toLowerCase().includes(search))
+    .sort((a,b)=>new Date(a.utc)-new Date(b.utc));
+  let html = `<div style="font-size:12px;color:var(--text3);margin-bottom:10px;">${inCompCount} of ${ANCHOR_TARGET} target matches in this gameweek's shortlist.</div>`;
+  matches.forEach(m => { html += buildAdminCard(m); });
+  document.getElementById('adminMatchList').innerHTML = html;
+}
+function buildAdminCard(m) {
   const db = getDB();
-  const q = (document.getElementById('adminMatchSearch').value || '').toLowerCase();
-  const container = document.getElementById('adminMatchList');
-  const results = db.results || {};
-  const now = new Date();
-  let html = '';
-
-  function buildAdminCard(m) {
-    const res = results[m.id];
-    const tz = utcToZones(m.utc);
-    return `<div class="match-card" style="margin-bottom:8px;">
-      <div class="match-top">
-        <div class="match-teams">
-          <span class="team-name">${teamNameOnly(m.home)}</span>
-          <div class="vs-group">
-            <span class="vs-flag">${teamFlag(m.home)}</span>
-            <div class="vs-box ${res?'final':''}">${res ? `${res.home} - ${res.away}` : 'v'}</div>
-            <span class="vs-flag">${teamFlag(m.away)}</span>
-          </div>
-          <span class="team-name right">${teamNameOnly(m.away)}</span>
-        </div>
+  const res = db.results && db.results[m.id];
+  const postponed = isPostponed(m);
+  const tz = utcToZones(m.utc);
+  const anchors = [m.home, m.away].filter(c => ANCHOR_CLUBS.includes(c));
+  const homeClub = CLUBS[m.home]||{}, awayClub = CLUBS[m.away]||{};
+  return `<div class="match-card" id="admincard_${m.id}">
+    <div class="match-top">
+      <div class="match-teams">
+        <span class="team-badge" style="background:${homeClub.color||'#555'}">${homeClub.code||''}</span>
+        <span class="team-name">${escapeHtml(m.home)}</span>
+        <div class="vs-box ${res?'final':''}">${res?`${res.home}-${res.away}`:'v'}</div>
+        <span class="team-name right">${escapeHtml(m.away)}</span>
+        <span class="team-badge" style="background:${awayClub.color||'#555'}">${awayClub.code||''}</span>
       </div>
-      <div class="match-meta" style="margin-bottom:4px;">
-        <span class="match-badge ${res?'badge-final':'badge-locked'}">${res?'Final':'Locked'}</span>
-        <span class="match-time">AET ${tz.aet}</span>
+    </div>
+    <div class="match-meta">
+      <span class="match-badge ${m.inComp?'badge-open':'badge-excluded'}">${m.inComp ? (m.tag==='anchor'?'Anchor, in comp':m.tag==='wildcard'?'Wildcard, in comp':'In comp') : (m.reason==='friday'?'Friday, excluded':'Not selected')}</span>
+      ${postponed?'<span class="match-badge badge-postponed">Postponed</span>':''}
+      ${anchors.length?`<span style="font-size:11px;color:var(--text3);">Anchor: ${anchors.join(', ')}</span>`:''}
+    </div>
+    <div class="tz-stack"><span class="tz-line"><b>SGT</b> ${tz.sgt} &nbsp;&nbsp; <b>UK</b> ${tz.uk}</span></div>
+    <div class="admin-score-row">
+      ${!m.inComp ? `<button class="btn-wildcard" onclick="setWildcard('${m.id}', true)">+ Add as wildcard</button>` : (m.tag==='wildcard' ? `<button class="btn-wildcard" onclick="setWildcard('${m.id}', false)">Remove wildcard</button>` : '<span style="font-size:11px;color:var(--text3);">Required anchor fixture</span>')}
+      ${m.inComp && !postponed ? `<button class="btn-postpone" onclick="togglePostponed('${m.id}', true)">Mark postponed</button>` : ''}
+      ${postponed ? `<button class="btn-recalc" onclick="togglePostponed('${m.id}', false)">Unmark postponed</button>` : ''}
+    </div>
+    ${m.inComp && !postponed ? `<div class="admin-score-row">
+      <span class="admin-badge-label">RESULT</span>
+      <div class="score-input-group">
+        <input class="score-input" type="number" min="0" max="99" value="${res?res.home:''}" id="admin_h_${m.id}">
+        <span class="score-sep">:</span>
+        <input class="score-input" type="number" min="0" max="99" value="${res?res.away:''}" id="admin_a_${m.id}">
       </div>
-      <div class="admin-score-row">
-        <span class="admin-badge-label">ADMIN</span>
-        <div class="score-input-group">
-          <input class="score-input" type="number" min="0" max="99" id="ar_h_${m.id}" value="${res !== undefined ? res.home : ''}" placeholder="H" style="width:44px">
-          <span class="score-sep">:</span>
-          <input class="score-input" type="number" min="0" max="99" id="ar_a_${m.id}" value="${res !== undefined ? res.away : ''}" placeholder="A" style="width:44px">
-        </div>
-        <button class="btn-confirm" onclick="confirmResult('${m.id}','${escapeHtml(m.home)}','${escapeHtml(m.away)}')">${res !== undefined ? 'Update' : 'Confirm'}</button>
-        ${res !== undefined ? `<button class="btn-danger" onclick="clearResult('${m.id}')">Clear</button>` : ''}
-      </div>
-    </div>`;
-  }
-
-  if (q) {
-    MATCHES.filter(m =>
-      m.home.toLowerCase().includes(q) || m.away.toLowerCase().includes(q) || m.phase.toLowerCase().includes(q)
-    ).forEach(m => { html += buildAdminCard(m); });
-  } else {
-    const locked = MATCHES
-      .filter(m => now >= new Date(new Date(m.utc).getTime() - 60*60*1000))
-      .sort((a, b) => new Date(a.utc) - new Date(b.utc));
-    let anchorId = null;
-    for (let i = locked.length - 1; i >= 0; i--) {
-      if (results[locked[i].id] === undefined) { anchorId = locked[i].id; break; }
-    }
-    let lastLabel = null;
-    locked.forEach(m => {
-      if (m.id === anchorId) {
-        html += '<div id="adminResultAnchor" style="scroll-margin-top:80px;"></div>';
-      }
-      const label = matchDateLabel(m.utc);
-      if (label !== lastLabel) {
-        html += `<div class="group-label">${label}</div>`;
-        lastLabel = label;
-      }
-      html += buildAdminCard(m);
+      <button class="btn-confirm" onclick="submitResult('${m.id}')">${res?'Update':'Confirm'} result</button>
+    </div>` : ''}
+  </div>`;
+}
+async function setWildcard(matchId, on) {
+  try {
+    await safeMutate(db => {
+      if (!db.overrides[matchId]) db.overrides[matchId] = {};
+      if (on) { db.overrides[matchId].inComp = true; db.overrides[matchId].tag = 'wildcard'; }
+      else { db.overrides[matchId].inComp = false; db.overrides[matchId].tag = null; }
     });
-    if (!anchorId) {
-      html += '<div id="adminResultAnchor" style="scroll-margin-top:80px;"></div>';
-      html += '<div style="color:var(--text3);font-size:12px;padding:8px 0;">All results confirmed.</div>';
-    }
-  }
-
-  if (!html) html = '<div style="color:var(--text3);font-size:13px;padding:10px 0;">No locked matches yet, or no search results.</div>';
-  container.innerHTML = html;
+    showToast(on?'Added as wildcard':'Removed from shortlist', 'success');
+    renderAdminMatches();
+  } catch(e) { showToast('Failed to update', 'error'); }
 }
-
-function scrollToAdminAnchor() {
-  requestAnimationFrame(() => {
-    const el = document.getElementById('adminResultAnchor');
-    if (el) el.scrollIntoView({ behavior: 'instant', block: 'start' });
-  });
+async function togglePostponed(matchId, on) {
+  try {
+    await safeMutate(db => {
+      if (!db.overrides[matchId]) db.overrides[matchId] = {};
+      db.overrides[matchId].postponed = on;
+    });
+    showToast(on?'Marked postponed':'Postponed flag removed', 'success');
+    renderAdminMatches();
+  } catch(e) { showToast('Failed to update', 'error'); }
 }
-
+async function submitResult(matchId) {
+  const h = parseInt(document.getElementById('admin_h_'+matchId).value);
+  const a = parseInt(document.getElementById('admin_a_'+matchId).value);
+  if (isNaN(h) || isNaN(a) || h<0 || a<0) { showToast('Enter valid scores', 'error'); return; }
+  try {
+    await safeMutate(db => { db.results[matchId] = { home:h, away:a }; });
+    showToast('Result saved. Remember to recalculate.', 'success');
+    renderAdminMatches();
+  } catch(e) { showToast('Failed to save result', 'error'); }
+}
+function renderKickoffEditor() {
+  if (!isAdmin()) return;
+  const search = (document.getElementById('koSearchInput').value||'').toLowerCase();
+  const matches = MATCHES.map(effectiveMatch)
+    .filter(m => !search || m.home.toLowerCase().includes(search) || m.away.toLowerCase().includes(search))
+    .sort((a,b)=>new Date(a.utc)-new Date(b.utc));
+  const html = matches.map(m => `<div class="wildcard-option" style="cursor:default;">
+      <div style="flex:1;min-width:160px;">
+        <div style="font-size:13px;">GW${m.gw}: ${escapeHtml(m.home)} v ${escapeHtml(m.away)}</div>
+        <div style="font-size:11px;color:var(--text3);">${m.reason==='friday' && m.inComp===false ?'Currently Friday-excluded':''}</div>
+      </div>
+      <input class="form-input" style="width:auto;" type="datetime-local" id="ko_${m.id}" value="${toDatetimeLocalSGT(m.utc)}">
+      <button class="btn-confirm" onclick="saveKickoff('${m.id}')">Save (SGT)</button>
+    </div>`).join('');
+  document.getElementById('kickoffEditorList').innerHTML = html || '<div style="color:var(--text3);font-size:13px;">No matches.</div>';
+}
+async function saveKickoff(matchId) {
+  const val = document.getElementById('ko_'+matchId).value;
+  if (!val) { showToast('Enter a date/time', 'error'); return; }
+  let iso;
+  try { iso = sgtLocalToUtcIso(val); } catch(e) { showToast('Invalid date/time', 'error'); return; }
+  const newDate = new Date(iso);
+  if (isNaN(newDate.getTime())) { showToast('Invalid date/time', 'error'); return; }
+  const ukDay = newDate.toLocaleString('en-GB', { timeZone:'Europe/London', weekday:'short' });
+  try {
+    await safeMutate(db => {
+      if (!db.overrides[matchId]) db.overrides[matchId] = {};
+      db.overrides[matchId].utc = iso;
+      if (ukDay === 'Fri') { db.overrides[matchId].inComp = false; db.overrides[matchId].tag = null; }
+    });
+    showToast(ukDay==='Fri' ? 'Saved. Now a Friday UK kick-off, removed from shortlist' : 'Kick-off time updated', 'success');
+    renderKickoffEditor(); renderAdminMatches();
+  } catch(e) { showToast('Failed to save', 'error'); }
+}
 function renderAdminPlayers() {
+  if (!isAdmin()) return;
   const db = getDB();
-  const container = document.getElementById('adminPlayerList');
-  if (!db.players) return;
-  container.innerHTML = Object.entries(db.players).map(([key, p]) => {
-    const stats = calcPlayerStats(key);
+  const players = Object.entries(db.players || {});
+  document.getElementById('adminPlayerList').innerHTML = players.map(([key,p]) => {
+    const used = bankersUsedCount(p.name);
     return `<div class="player-admin-row">
-      <div class="player-admin-name">${p.name}${p.isAdmin ? ' ★' : ''}</div>
-      <div class="player-admin-meta">${stats.pts} pts &nbsp;|&nbsp; Joined ${new Date(p.joined).toLocaleDateString('en-GB')}</div>
-      <button class="btn-warning" onclick="resetPlayer('${key}','${escapeHtml(p.name)}')">Reset</button>
+      <div class="player-admin-name">${escapeHtml(p.name)} ${p.isAdmin?'<span class="admin-badge-label">ADMIN</span>':''}</div>
+      <div class="player-admin-meta">${used}/8 bankers used</div>
+      ${!p.isAdmin ? `<button class="btn-warning" onclick="resetPlayer('${key}','${escapeHtml(p.name)}')">Reset PIN</button>` : ''}
       ${!p.isAdmin ? `<button class="btn-danger" onclick="removePlayer('${key}','${escapeHtml(p.name)}')">Remove</button>` : ''}
     </div>`;
-  }).join('');
+  }).join('') || '<div style="color:var(--text3);font-size:13px;">No players yet.</div>';
 }
-
-async function confirmResult(matchId, home, away) {
-  const h = parseInt(document.getElementById(`ar_h_${matchId}`).value);
-  const a = parseInt(document.getElementById(`ar_a_${matchId}`).value);
-  if (isNaN(h) || isNaN(a)) { showToast('Enter both scores', 'error'); return; }
-  try {
-    await safeMutate(db => { db.results[matchId] = { home: h, away: a }; });
-    showToast(`Result saved: ${home} ${h}-${a} ${away}`, 'success');
-    renderAdminMatches();
-  } catch(e) { showToast('Save failed. Try again.', 'error'); }
-}
-
-async function clearResult(matchId) {
-  openModal('Clear Result', 'Remove this final score? Player points will be recalculated.', async () => {
-    try {
-      await safeMutate(db => { if (db.results) delete db.results[matchId]; });
-      showToast('Result cleared', 'success');
-      renderAdminMatches();
-    } catch(e) { showToast('Clear failed. Try again.', 'error'); }
+function resetPlayer(key, name) {
+  openModal('Reset PIN', `Reset ${name}'s PIN to 0000? Tell them the new PIN so they can sign in.`, async () => {
+    try { await safeMutate(db => { if (db.players[key]) db.players[key].pin = hashPin('0000'); }); showToast('PIN reset to 0000', 'success'); }
+    catch(e) { showToast('Failed to reset', 'error'); }
+    closeModal();
   });
 }
-
+function removePlayer(key, name) {
+  openModal('Remove player', `Remove ${name} from the competition? Their predictions stay in the data but they won't be able to sign in.`, async () => {
+    try { await safeMutate(db => { if (db.players) delete db.players[key]; }); showToast('Player removed', 'success'); renderAdminPlayers(); renderLeaderboard(); }
+    catch(e) { showToast('Failed to remove', 'error'); }
+    closeModal();
+  });
+}
 async function recalcAll() {
-  // Points are always calculated live from db.results and db.predictions
-  // This just re-fetches the latest data and refreshes the view
-  await loadDB();
+  _clearCache();
+  await loadDB(true);
+  renderLeaderboard();
   showToast('Leaderboard recalculated', 'success');
-  renderAdmin();
 }
-
-async function exportData() {
-  try {
-    // Pull the freshest copy so the backup is current
-    const fresh = await fetchDB();
-    const payload = {
-      _backup: 'wc2026-predictor',
-      _version: 1,
-      _exportedAt: new Date().toISOString(),
-      data: fresh,
-    };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    const stamp = new Date().toISOString().slice(0,16).replace(/[:T]/g,'-');
-    a.href = url;
-    a.download = `wc2026-backup-${stamp}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    showToast('Backup downloaded', 'success');
-  } catch(e) {
-    showToast('Backup failed. Try again.', 'error');
-  }
+function exportData() {
+  const db = getDB();
+  const blob = new Blob([JSON.stringify(db, null, 2)], { type:'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `epl2627-backup-${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
-
 function importData(event) {
-  const file = event.target.files && event.target.files[0];
-  event.target.value = ''; // reset so the same file can be picked again later
+  const file = event.target.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = () => {
-    let parsed;
     try {
-      parsed = JSON.parse(reader.result);
-    } catch(e) {
-      showToast('That file is not valid JSON', 'error'); return;
-    }
-    const data = (parsed && parsed._backup === 'wc2026-predictor' && parsed.data) ? parsed.data : parsed;
-    if (!data || typeof data !== 'object' || !data.players) {
-      showToast('That does not look like a WC2026 backup', 'error'); return;
-    }
-    const playerCount = Object.keys(data.players).length;
-    const resultCount = data.results ? Object.keys(data.results).length : 0;
-    openModal('Restore from backup?',
-      `This replaces everything currently in the app with the backup: ${playerCount} players and ${resultCount} results. This cannot be undone. Continue?`,
-      async () => {
-        try {
-          await safeMutate(db => {
-            // Replace each top-level section wholesale
-            db.players = data.players || {};
-            db.predictions = data.predictions || {};
-            db.results = data.results || {};
-            db.teamOverrides = data.teamOverrides || {};
-            db.settings = data.settings || {};
-          });
-          // Re-apply team overrides to the live MATCHES array
-          const db = getDB();
-          MATCHES.forEach(m => {
-            if (db.teamOverrides[m.id + '_h'] !== undefined) m.home = db.teamOverrides[m.id + '_h'];
-            else m.home = m.origHome;
-            if (db.teamOverrides[m.id + '_a'] !== undefined) m.away = db.teamOverrides[m.id + '_a'];
-            else m.away = m.origAway;
-          });
-          showToast('Backup restored', 'success');
-          renderAdmin();
-        } catch(e) {
-          showToast('Restore failed. Try again.', 'error');
-        }
+      const data = JSON.parse(reader.result);
+      openModal('Restore backup', 'This overwrites everything currently in the app with this backup file. Continue?', async () => {
+        try { await saveDB(data); _db = data; _writeCache(data); showToast('Restored from backup', 'success'); closeModal(); renderAdmin(); renderLeaderboard(); }
+        catch(e) { showToast('Restore failed', 'error'); }
       });
+    } catch(e) { showToast('Invalid backup file', 'error'); }
   };
-  reader.onerror = () => showToast('Could not read that file', 'error');
   reader.readAsText(file);
+  event.target.value = '';
 }
 
-
-function resetPlayer(key, name) {
-  openModal('Reset Player', `Clear all predictions for ${name}? Their account remains but all predictions are wiped.`, async () => {
-    try {
-      await safeMutate(db => { if (db.predictions) delete db.predictions[key]; });
-      showToast(`${name} predictions reset`, 'success');
-      renderAdminPlayers();
-    } catch(e) { showToast('Reset failed. Try again.', 'error'); }
-  });
-}
-
-function removePlayer(key, name) {
-  openModal('Remove Player', `Permanently remove ${name}? This deletes their account and all predictions.`, async () => {
-    try {
-      await safeMutate(db => {
-        if (db.players) delete db.players[key];
-        if (db.predictions) delete db.predictions[key];
-      });
-      showToast(`${name} removed`, 'success');
-      renderAdminPlayers();
-    } catch(e) { showToast('Remove failed. Try again.', 'error'); }
-  });
-}
-
-// ─── MODAL ───────────────────────────────────────────────────────────────────
+// ─── MODAL / TOAST ────────────────────────────────────────────────────────────
 let _modalCb = null;
 function openModal(title, desc, cb) {
   document.getElementById('modalTitle').textContent = title;
   document.getElementById('modalDesc').textContent = desc;
   _modalCb = cb;
+  document.getElementById('modalConfirmBtn').onclick = () => { if (_modalCb) _modalCb(); };
   document.getElementById('confirmModal').classList.add('show');
-  document.getElementById('modalConfirmBtn').onclick = () => { closeModal(); if (_modalCb) _modalCb(); };
 }
 function closeModal() { document.getElementById('confirmModal').classList.remove('show'); }
-
-// ─── TOAST ───────────────────────────────────────────────────────────────────
-let _toastTimer;
 function showToast(msg, type = '') {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.className = 'toast show' + (type ? ' ' + type : '');
-  clearTimeout(_toastTimer);
-  _toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show ' + type;
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(() => { t.classList.remove('show'); }, 2600);
 }
-
-// ─── UTILS ───────────────────────────────────────────────────────────────────
-function normName(name) { return name.trim().toLowerCase().replace(/\s+/g, '_'); }
-function initials(name) { return name.split(/[\s_]+/).map(w=>w[0]||'').join('').toUpperCase().slice(0,2); }
-function hashPin(pin) {
-  // Simple deterministic hash (not cryptographic, fine for a social game)
-  let h = 5381;
-  for (let i = 0; i < pin.length; i++) h = ((h << 5) + h) ^ pin.charCodeAt(i);
-  return (h >>> 0).toString(36);
-}
-function escapeHtml(str) { return str.replace(/'/g,"&#39;").replace(/"/g,"&quot;"); }
-
-async function refreshLeaderboard() {
-  const btn = document.getElementById('refreshBtn');
-  if (btn) { btn.classList.add('spinning'); btn.textContent = 'Refreshing...'; btn.disabled = true; }
-  _clearCache();
-  await loadDB(true);
-  renderLeaderboard();
-  if (btn) { btn.classList.remove('spinning'); btn.textContent = 'Refresh'; btn.disabled = false; }
-}
-
-// Auto-refresh kept at 24 hours as a safety net. Players use the Refresh button instead.
-setInterval(async () => {
-  if (currentPage === 'leaderboard'
-      && document.getElementById('appScreen').style.display !== 'none'
-      && document.visibilityState === 'visible') {
-    await loadDB();
-    renderLeaderboard();
-  }
-}, 86400000);
 </script>
 </body>
 </html>
