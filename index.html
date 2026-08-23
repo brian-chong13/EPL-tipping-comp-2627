@@ -943,7 +943,7 @@
     font-size: 12px;
   }
   .pick-row.pick-me { border: 1px solid var(--accent); }
-  .pick-name { color: var(--text2); flex-shrink: 0; min-width: 90px; }
+  .pick-name { color: var(--text2); flex-shrink: 0; min-width: 90px; display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
   .pick-score { font-family: 'DM Mono', monospace; color: var(--text); font-weight: 500; }
 
   /* CHAT BOARD */
@@ -2003,7 +2003,11 @@ function renderMatchCard(m, pred, result, showPredInput) {
     } else {
       const ph = pred ? pred.home : '', pa = pred ? pred.away : '';
       const remaining = bankersRemaining(currentUser.name);
-      const bankerDisabled = !isBanker && !gwTest && remaining <= 0;
+      const currentBankerId = db.bankerPick && db.bankerPick[currentUser.name] && db.bankerPick[currentUser.name][m.gw];
+      const currentBankerMatch = currentBankerId ? MATCHES.find(x => x.id === currentBankerId) : null;
+      const bankerLockedElsewhere = !isBanker && !!(currentBankerMatch && isLocked(currentBankerMatch));
+      const bankerDisabled = !isBanker && (bankerLockedElsewhere || (!gwTest && remaining <= 0));
+      const bankerTitle = bankerLockedElsewhere ? 'Your banker is already locked in on another match' : (bankerDisabled ? 'No bankers remaining' : '');
       predSection = `<div class="pred-row">
         <span class="pred-label">Predict:</span>
         <div class="score-input-group">
@@ -2012,7 +2016,7 @@ function renderMatchCard(m, pred, result, showPredInput) {
           <input class="score-input" type="number" min="0" max="99" value="${pa}" id="pa_${m.id}" onchange="autoSave('${m.id}')">
         </div>
         <button class="btn-save" onclick="savePred('${m.id}')">Save</button>
-        <button class="btn-banker ${isBanker?'active':''}" ${bankerDisabled?'disabled':''} onclick="toggleBanker('${m.id}', ${m.gw})">${isBanker?'Banker set':'Set banker'}</button>
+        <button class="btn-banker ${isBanker?'active':''}" ${bankerDisabled?'disabled':''} title="${bankerTitle}" onclick="toggleBanker('${m.id}', ${m.gw})">${isBanker?'Banker set':'Set banker'}</button>
         ${pred ? `<span class="pred-saved" id="saved_${m.id}">Saved</span>` : `<span class="pred-saved" style="display:none" id="saved_${m.id}">Saved</span>`}
       </div>`;
     }
@@ -2056,9 +2060,15 @@ function renderMatchCard(m, pred, result, showPredInput) {
 function renderPicksSection(m) {
   const db = getDB();
   const preds = db.predictions || {};
+  const bankerPicks = db.bankerPick || {};
   const rows = Object.entries(preds).filter(([,p]) => p[m.id]).map(([player,p]) => {
     const pr = p[m.id];
-    return `<div class="pick-row ${player===currentUser.name?'pick-me':''}"><span class="pick-name">${escapeHtml(player)}</span><span class="pick-score">${pr.home}-${pr.away}</span></div>`;
+    const usedBanker = !!(bankerPicks[player] && bankerPicks[player][m.gw] === m.id);
+    // Spell it out rather than a bare star - a symbol alone won't mean anything to someone
+    // glancing at this on their phone. Same "★ Banker" chip style already used elsewhere
+    // (e.g. next to a scored banker pick), so it reads the same wherever it shows up.
+    const bankerBadge = usedBanker ? `<span class="bonus-chip chip-banker">★ Banker</span>` : '';
+    return `<div class="pick-row ${player===currentUser.name?'pick-me':''}"><span class="pick-name">${escapeHtml(player)}${bankerBadge}</span><span class="pick-score">${pr.home}-${pr.away}</span></div>`;
   });
   if (!rows.length) return '';
   return `<details class="picks-details"><summary class="picks-summary">See everyone's picks (${rows.length})</summary><div class="picks-list">${rows.join('')}</div></details>`;
@@ -2092,6 +2102,13 @@ async function toggleBanker(matchId, gw) {
   const current = db.bankerPick && db.bankerPick[playerKey] && db.bankerPick[playerKey][gw];
   const turningOff = current === matchId;
   const match = MATCHES.find(m => m.id === matchId);
+  // Once your CURRENT banker's own match has kicked off (locked), that pick is locked in -
+  // can't remove it, and can't move the banker onto a different, still-open match instead.
+  // Checked before anything else so it also covers switching away, not just direct removal.
+  if (current) {
+    const currentMatch = MATCHES.find(m => m.id === current);
+    if (currentMatch && isLocked(currentMatch)) { showToast('Your banker is locked in, that match has already kicked off.', 'error'); return; }
+  }
   if (!turningOff && match && isLocked(match)) { showToast('This match is locked.', 'error'); return; }
   if (!turningOff && !isTestGw(gw) && bankersRemaining(playerKey) <= 0) { showToast('No bankers left this season', 'error'); return; }
   try {
