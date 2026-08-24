@@ -945,6 +945,7 @@
   .pick-row.pick-me { border: 1px solid var(--accent); }
   .pick-name { color: var(--text2); flex-shrink: 0; min-width: 90px; display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
   .pick-score { font-family: 'DM Mono', monospace; color: var(--text); font-weight: 500; }
+  .pick-pts { font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; margin-left: auto; }
 
   /* CHAT BOARD */
   .chat-compose { display: flex; gap: 10px; margin-bottom: 16px; align-items: flex-start; }
@@ -2061,6 +2062,7 @@ function renderPicksSection(m) {
   const db = getDB();
   const preds = db.predictions || {};
   const bankerPicks = db.bankerPick || {};
+  const result = db.results && db.results[m.id];
   const rows = Object.entries(preds).filter(([,p]) => p[m.id]).map(([player,p]) => {
     const pr = p[m.id];
     const usedBanker = !!(bankerPicks[player] && bankerPicks[player][m.gw] === m.id);
@@ -2068,7 +2070,16 @@ function renderPicksSection(m) {
     // glancing at this on their phone. Same "★ Banker" chip style already used elsewhere
     // (e.g. next to a scored banker pick), so it reads the same wherever it shows up.
     const bankerBadge = usedBanker ? `<span class="bonus-chip chip-banker">★ Banker</span>` : '';
-    return `<div class="pick-row ${player===currentUser.name?'pick-me':''}"><span class="pick-name">${escapeHtml(player)}${bankerBadge}</span><span class="pick-score">${pr.home}-${pr.away}</span></div>`;
+    // Points only appear once a result exists - can't score a prediction against nothing yet.
+    // Same total/colour logic as the player's own "Your prediction" points, applied per row.
+    let ptsHtml = '';
+    if (result) {
+      const calc = calcMatchPts(m, pr, result);
+      const pts = calc ? (usedBanker ? calc.total * 2 : calc.total) : 0;
+      const color = calc && calc.exact ? 'var(--accent3)' : (calc && calc.correctResult ? 'var(--green)' : 'var(--text3)');
+      ptsHtml = `<span class="pick-pts" style="color:${color};">${pts} pts</span>`;
+    }
+    return `<div class="pick-row ${player===currentUser.name?'pick-me':''}"><span class="pick-name">${escapeHtml(player)}${bankerBadge}</span><span class="pick-score">${pr.home}-${pr.away}</span>${ptsHtml}</div>`;
   });
   if (!rows.length) return '';
   return `<details class="picks-details"><summary class="picks-summary">See everyone's picks (${rows.length})</summary><div class="picks-list">${rows.join('')}</div></details>`;
