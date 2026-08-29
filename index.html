@@ -207,6 +207,19 @@
   }
   .test-banner strong { color: var(--purple); }
 
+  /* PERFECT GAMEWEEK BANNER */
+  .perfect-banner {
+    background: linear-gradient(135deg, rgba(255,214,0,0.18), rgba(0,230,118,0.08));
+    border: 1px solid var(--gold);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text2);
+  }
+  .perfect-banner strong { color: var(--gold); }
+
   /* LEADERBOARD */
   .leaderboard-header {
     display: grid;
@@ -1103,7 +1116,7 @@
       <div class="card">
         <div class="card-title">STANDINGS<button class="refresh-btn" id="refreshBtn" onclick="refreshLeaderboard()">Refresh</button></div>
         <div class="leaderboard-header">
-          <div>#</div><div>Player</div><div style="text-align:center">Exact</div><div style="text-align:center">Bonus</div><div style="text-align:center">Pts</div><div style="text-align:center">GW Wins</div>
+          <div>#</div><div>Player</div><div style="text-align:center">Exact</div><div style="text-align:center">Bonus</div><div style="text-align:center">Pts</div><div style="text-align:center" title="Decided once every match in a gameweek has a result - highest score that week wins, ties share">GW Wins</div>
         </div>
         <div id="leaderboardBody"></div>
       </div>
@@ -1112,13 +1125,14 @@
     <!-- PREDICTIONS PAGE -->
     <div class="page" id="page-predictions">
       <div id="predTestBanner"></div>
+      <div id="predPerfectBanner"></div>
       <div class="card" style="padding:14px 16px; margin-bottom:16px;">
         <div class="scoring-info">
           <b>Scoring:</b> 3 pts exact score, 1 pt correct result.
           <span class="bonus-line">🔥 <b>Goal Fest</b> +3, exact score on a match with 5 or more total goals</span>
           <span class="bonus-line">⚡ <b>Upset Special</b> +2 (result) / +4 (exact) when a severe underdog (10+ table places) wins outright and you called it</span>
           <span class="bonus-line">🤝 <b>Underdog Draw</b> +1, a severe underdog draws and you called it</span>
-          <span class="bonus-line">💯 <b>Perfect Gameweek</b> +5 (all results) / +10 (all exact)</span>
+          <span class="bonus-line">💯 <b>Perfect Gameweek</b> +5 (all results) / +10 (all exact) - only awarded once every match that gameweek has a final result</span>
           <span class="bonus-line">★ <b>Banker</b>, doubles one nominated pick's points, 8 uses per season</span>
           <span class="bonus-line">Predictions lock 19:00 SG/KL every Saturday for that whole gameweek (Gameweek 1 is the exception - each match locks 30 min before its own kick-off instead).</span>
         </div>
@@ -1278,11 +1292,21 @@ const GAMEWEEKS = {
   1: { isTest: true, resetAtUTC: '2026-08-29T10:00:00Z' },
   2: { deadlineUTC: '2026-08-29T11:00:00Z' },
   3: { deadlineUTC: '2026-09-05T11:00:00Z' },
+  4: { deadlineUTC: '2026-09-12T11:00:00Z' },
+  5: { deadlineUTC: '2026-09-19T11:00:00Z' },
+  6: { deadlineUTC: '2026-10-10T11:00:00Z' },
+  7: { deadlineUTC: '2026-10-17T11:00:00Z' },
+  8: { deadlineUTC: '2026-10-24T11:00:00Z' },
+  9: { deadlineUTC: '2026-10-31T11:00:00Z' },
 };
 
 // ─── MATCHES ────────────────────────────────────────────────────────────────
-// Real fixtures for gameweeks 1-3 (premierleague.com / Sky Sports, confirmed
-// 21 Aug 2026). reason:'friday' marks a match excluded from selection because
+// Real fixtures for gameweeks 1-9 (premierleague.com / Sky Sports / TNT Sports,
+// GW1-3 confirmed 21 Aug 2026, GW4-9 confirmed and added 29 Aug 2026). App
+// gameweek numbers match real Premier League matchweek numbers exactly, no
+// offset (verified against the season's own MW1-9 date ranges before adding
+// GW4-9, including the international break between MW5 and MW6 - no gameweek
+// skipped). reason:'friday' marks a match excluded from selection because
 // it kicks off Friday night UK time - never eligible for the shortlist.
 // Which matches are actually in a gameweek's shortlist is NOT baked in here -
 // see the SHORTLIST section below (suggestedShortlist / gwEffectiveIds).
@@ -1325,6 +1349,78 @@ const MATCHES = (() => {
     [3,'Hull City','Aston Villa','2026-09-05T16:30:00Z',null],
     [3,'Everton','Manchester United','2026-09-06T13:00:00Z',null],
     [3,'Arsenal','Chelsea','2026-09-06T15:30:00Z',null],
+    // GW4 — no Friday fixture this round (compressed Sat-Mon)
+    [4,'AFC Bournemouth','Brentford','2026-09-12T14:00:00Z',null],
+    [4,'Aston Villa','Nottingham Forest','2026-09-12T14:00:00Z',null],
+    [4,'Chelsea','Hull City','2026-09-12T14:00:00Z',null],
+    [4,'Crystal Palace','Ipswich Town','2026-09-12T14:00:00Z',null],
+    [4,'Liverpool','Fulham','2026-09-12T14:00:00Z',null],
+    [4,'Sunderland','Arsenal','2026-09-12T19:00:00Z',null],
+    [4,'Tottenham Hotspur','Everton','2026-09-12T16:30:00Z',null],
+    [4,'Coventry City','Brighton & Hove Albion','2026-09-13T13:00:00Z',null],
+    [4,'Manchester United','Manchester City','2026-09-13T15:30:00Z',null],
+    [4,'Leeds United','Newcastle United','2026-09-14T19:00:00Z',null],
+    // GW5
+    [5,'Brentford','Chelsea','2026-09-18T19:00:00Z','friday'],
+    [5,'Brighton & Hove Albion','Arsenal','2026-09-19T14:00:00Z',null],
+    [5,'Everton','Ipswich Town','2026-09-19T14:00:00Z',null],
+    [5,'Leeds United','Crystal Palace','2026-09-19T14:00:00Z',null],
+    [5,'Manchester City','Sunderland','2026-09-19T14:00:00Z',null],
+    [5,'Newcastle United','Hull City','2026-09-19T14:00:00Z',null],
+    [5,'Nottingham Forest','Coventry City','2026-09-19T16:30:00Z',null],
+    [5,'Tottenham Hotspur','Aston Villa','2026-09-19T11:30:00Z',null],
+    [5,'AFC Bournemouth','Liverpool','2026-09-20T13:00:00Z',null],
+    [5,'Fulham','Manchester United','2026-09-20T15:30:00Z',null],
+    // International break between GW5 (20 Sep) and GW6 (10 Oct) - no PL fixtures,
+    // deliberately no gameweek number used for it.
+    // GW6 — no Friday fixture this round
+    [6,'Arsenal','Leeds United','2026-10-10T11:30:00Z',null],
+    [6,'Aston Villa','Brentford','2026-10-10T14:00:00Z',null],
+    [6,'Chelsea','AFC Bournemouth','2026-10-10T14:00:00Z',null],
+    [6,'Ipswich Town','Fulham','2026-10-10T14:00:00Z',null],
+    [6,'Sunderland','Brighton & Hove Albion','2026-10-10T14:00:00Z',null],
+    [6,'Manchester United','Tottenham Hotspur','2026-10-10T16:30:00Z',null],
+    [6,'Crystal Palace','Nottingham Forest','2026-10-11T13:00:00Z',null],
+    [6,'Hull City','Everton','2026-10-11T13:00:00Z',null],
+    [6,'Liverpool','Manchester City','2026-10-11T15:30:00Z',null],
+    [6,'Coventry City','Newcastle United','2026-10-12T19:00:00Z',null],
+    // GW7 — no Friday fixture this round
+    [7,'Everton','Chelsea','2026-10-17T11:30:00Z',null],
+    [7,'Brentford','Liverpool','2026-10-17T14:00:00Z',null],
+    [7,'Fulham','Hull City','2026-10-17T14:00:00Z',null],
+    [7,'Manchester City','Ipswich Town','2026-10-17T14:00:00Z',null],
+    [7,'Newcastle United','Aston Villa','2026-10-17T16:30:00Z',null],
+    [7,'AFC Bournemouth','Sunderland','2026-10-18T13:00:00Z',null],
+    [7,'Brighton & Hove Albion','Crystal Palace','2026-10-18T13:00:00Z',null],
+    [7,'Leeds United','Manchester United','2026-10-18T13:00:00Z',null],
+    [7,'Nottingham Forest','Arsenal','2026-10-18T15:30:00Z',null],
+    [7,'Tottenham Hotspur','Coventry City','2026-10-19T19:00:00Z',null],
+    // GW8 — UK clocks go back (BST to GMT) at 2am on 25 Oct, mid-round; the two
+    // Sun 25 Oct matches below are already GMT (no -1hr offset), unlike the Fri/Sat
+    // ones. Aston Villa v Man City may move to 20:00 UK (19:00 UTC) if Villa are
+    // drawn away in the Champions League that week - using the currently-scheduled
+    // 12:30 UK kick-off; re-check nearer the time if that's still live.
+    [8,'Ipswich Town','Nottingham Forest','2026-10-23T19:00:00Z','friday'],
+    [8,'Aston Villa','Manchester City','2026-10-24T11:30:00Z',null],
+    [8,'Arsenal','Everton','2026-10-24T14:00:00Z',null],
+    [8,'Coventry City','Fulham','2026-10-24T14:00:00Z',null],
+    [8,'Liverpool','Brighton & Hove Albion','2026-10-24T14:00:00Z',null],
+    [8,'Chelsea','Tottenham Hotspur','2026-10-24T16:30:00Z',null],
+    [8,'Crystal Palace','Newcastle United','2026-10-25T14:00:00Z',null],
+    [8,'Hull City','Brentford','2026-10-25T14:00:00Z',null],
+    [8,'Manchester United','AFC Bournemouth','2026-10-25T14:00:00Z',null],
+    [8,'Sunderland','Leeds United','2026-10-25T16:30:00Z',null],
+    // GW9 — fully GMT now (BST already ended), no Friday fixture this round
+    [9,'Chelsea','Manchester United','2026-10-31T12:30:00Z',null],
+    [9,'AFC Bournemouth','Leeds United','2026-10-31T15:00:00Z',null],
+    [9,'Brentford','Nottingham Forest','2026-10-31T15:00:00Z',null],
+    [9,'Coventry City','Sunderland','2026-10-31T15:00:00Z',null],
+    [9,'Hull City','Ipswich Town','2026-10-31T15:00:00Z',null],
+    [9,'Manchester City','Brighton & Hove Albion','2026-10-31T15:00:00Z',null],
+    [9,'Tottenham Hotspur','Crystal Palace','2026-10-31T17:30:00Z',null],
+    [9,'Aston Villa','Fulham','2026-11-01T14:00:00Z',null],
+    [9,'Liverpool','Arsenal','2026-11-01T16:30:00Z',null],
+    [9,'Newcastle United','Everton','2026-11-02T20:00:00Z',null],
   ];
   const counters = {};
   return raw.map(([gw,home,away,utc,reason]) => {
@@ -1427,6 +1523,17 @@ function matchDeadlineMs(m) {
   return isTestGw(m.gw) ? new Date(m.utc).getTime() - 30*60*1000 : gwDeadlineMs(m.gw);
 }
 function gwDeadlineMs(gw) {
+  // Check the configured deadline FIRST, before touching effectiveMatch at all.
+  // effectiveMatch -> gwEffectiveIds -> isGwOpen -> isGwLocked -> gwDeadlineMs(prevGw)
+  // is a real recursive chain, and computing gwMatches unconditionally used to
+  // walk it once per match in the gameweek (~10x fan-out per level). With only
+  // 3 gameweeks that was slow-ish; it becomes exponential and effectively hangs
+  // once enough gameweeks are chained (found while adding GW4-9). Every real
+  // gameweek has an explicit deadlineUTC, so this early return means the
+  // expensive path below is only ever reached for the test gameweek (which
+  // terminates immediately, no predecessor) or a genuinely unconfigured one.
+  const g = GAMEWEEKS[gw];
+  if (!isTestGw(gw) && g && g.deadlineUTC) return new Date(g.deadlineUTC).getTime();
   const gwMatches = MATCHES.filter(m => m.gw === gw).map(effectiveMatch).filter(m => m.inComp);
   if (isTestGw(gw)) {
     // "The gameweek is locked" for a test gameweek means every one of its
@@ -1434,8 +1541,6 @@ function gwDeadlineMs(gw) {
     if (!gwMatches.length) return Infinity;
     return Math.max(...gwMatches.map(matchDeadlineMs));
   }
-  const g = GAMEWEEKS[gw];
-  if (g && g.deadlineUTC) return new Date(g.deadlineUTC).getTime();
   if (!gwMatches.length) return Infinity;
   const earliest = Math.min(...gwMatches.map(m => new Date(m.utc).getTime()));
   return earliest - 60*60*1000; // fallback: 1hr before earliest in-comp match
@@ -1552,6 +1657,25 @@ function bankersUsedCount(playerKey) {
 }
 function bankersRemaining(playerKey) { return Math.max(0, 8 - bankersUsedCount(playerKey)); }
 
+// ─── GAMEWEEK COMPLETION ─────────────────────────────────────────────────────
+// "Complete" means every match actually counting for this gameweek (in the
+// shortlist, not postponed) has a result entered. Nothing gameweek-level - the
+// Perfect/Correct Gameweek bonus, or a gameweek winner - is decided until this
+// is true, so entering results one match at a time over a weekend never fires
+// a bonus or a winner early off a partial set. A postponed match is already
+// excluded from the shortlist count (see effectiveMatch/isPostponed above), so
+// it can't stall completion - only a match that's genuinely still pending a
+// result does.
+function gwCountingMatches(gw) {
+  return MATCHES.filter(m => m.gw === gw).map(effectiveMatch).filter(m => m.inComp && !isPostponed(m));
+}
+function isGwComplete(gw) {
+  const matches = gwCountingMatches(gw);
+  if (!matches.length) return false;
+  const db = getDB();
+  return matches.every(m => db.results && db.results[m.id]);
+}
+
 function calcPlayerStats(playerKey) {
   const db = getDB();
   const preds = (db.predictions && db.predictions[playerKey]) || {};
@@ -1580,39 +1704,43 @@ function calcPlayerStats(playerKey) {
     perGw[m.gw].pts += matchTotal;
     bonusPts += calc.bonusTotal * (isBanker?2:1);
   });
+  // Perfect/Correct Gameweek only ever fires once the WHOLE gameweek is in
+  // (isGwComplete) - not just "every result entered so far happens to be
+  // right". perfectTier records which tier was hit ('exact' or 'correct') so
+  // the UI can call it out explicitly rather than folding it silently into
+  // the totals.
   Object.entries(perGw).forEach(([gw, s]) => {
     if (isTestReset(Number(gw))) return;
-    if (s.total === 0) return;
-    if (s.exactCount === s.total) { pts += 10; bonusPts += 10; s.pts += 10; }
-    else if (s.correct === s.total) { pts += 5; bonusPts += 5; s.pts += 5; }
+    if (!isGwComplete(Number(gw))) return;
+    if (s.exactCount === s.total) { s.perfectTier = 'exact'; pts += 10; bonusPts += 10; s.pts += 10; }
+    else if (s.correct === s.total) { s.perfectTier = 'correct'; pts += 5; bonusPts += 5; s.pts += 5; }
   });
   return { exact, pts, bonusPts, predicted, perGw };
 }
 
 // ─── GAMEWEEK WINNERS ────────────────────────────────────────────────────────
-// A gameweek only has a winner once at least one result is in for it, and only
-// if the best score is above zero - otherwise a week where everyone gets every
-// match wrong would "award" the win to the whole group. Ties share the win, no
-// tiebreaker. Test gameweeks (GW1) never count, same as everywhere else in the
-// app that already excludes GW1 from counting long-term. This recalculates live
-// from calcPlayerStats' perGw breakdown, so the leader can shift while a
-// gameweek is still being played and settles once all its matches are done -
-// same as every other number on this leaderboard.
+// A gameweek only gets a winner once it's fully complete (isGwComplete) - not
+// the moment any single result comes in. Highest total perGw points for that
+// gameweek wins, ties share, and a gameweek where the best score is 0 awards
+// nobody (everyone got everything wrong). Test gameweeks (GW1) never count,
+// same as everywhere else in the app that already excludes GW1 from counting
+// long-term. Because this waits for the whole gameweek, the leaderboard no
+// longer shifts mid-week - it appears once, correctly, when the last result
+// for that gameweek goes in.
 function calcGwWinners(statsByName) {
   const wins = {};
   Object.keys(statsByName).forEach(name => wins[name] = 0);
   const gws = Object.keys(GAMEWEEKS).map(Number).filter(gw => !isTestGw(gw));
   gws.forEach(gw => {
-    let best = 0, bestPlayers = [], anyResult = false;
+    if (!isGwComplete(gw)) return;
+    let best = 0, bestPlayers = [];
     Object.entries(statsByName).forEach(([name, stats]) => {
       const gwStat = stats.perGw[gw];
-      if (!gwStat || gwStat.total === 0) return;
-      anyResult = true;
-      const gwPts = gwStat.pts;
+      const gwPts = gwStat ? gwStat.pts : 0;
       if (gwPts > best) { best = gwPts; bestPlayers = [name]; }
       else if (gwPts === best) { bestPlayers.push(name); }
     });
-    if (!anyResult || best <= 0) return;
+    if (best <= 0) return;
     bestPlayers.forEach(name => wins[name]++);
   });
   return wins;
@@ -1895,8 +2023,15 @@ function renderLeaderboard() {
   const statsByName = {};
   players.forEach(([key, p]) => { statsByName[p.name] = calcPlayerStats(p.name); });
   const gwWins = calcGwWinners(statsByName);
-  const rows = players.map(([key, p]) => ({ name: p.name, ...statsByName[p.name], gwWins: gwWins[p.name] || 0 }))
-    .sort((a,b) => b.pts - a.pts || b.exact - a.exact || a.name.localeCompare(b.name));
+  const rows = players.map(([key, p]) => {
+    const stats = statsByName[p.name];
+    // Perfect Gameweek tally for the "obviously visible" achievement badge below -
+    // test gameweeks never count here either, same as gwWins.
+    const realGws = Object.entries(stats.perGw || {}).filter(([gw]) => !isTestGw(Number(gw)));
+    const exactGws = realGws.filter(([,g]) => g.perfectTier === 'exact').length;
+    const correctGws = realGws.filter(([,g]) => g.perfectTier === 'correct').length;
+    return { name: p.name, ...stats, gwWins: gwWins[p.name] || 0, exactGws, correctGws };
+  }).sort((a,b) => b.pts - a.pts || b.exact - a.exact || a.name.localeCompare(b.name));
 
   const me = rows.find(r => r.name === currentUser.name);
   document.getElementById('statYourPts').textContent = me ? me.pts : 0;
@@ -1910,9 +2045,15 @@ function renderLeaderboard() {
   body.innerHTML = rows.map((r, i) => {
     const rankClass = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'';
     const mine = r.name === currentUser.name ? 'me' : '';
+    // Spelled out, not just an emoji on its own - same lesson as the banker
+    // badge: a symbol alone doesn't tell anyone what it means at a glance.
+    const trophyBits = [];
+    if (r.exactGws) trophyBits.push(`💯 ${r.exactGws}&times; Perfect GW (+10)`);
+    if (r.correctGws) trophyBits.push(`💯 ${r.correctGws}&times; Perfect GW (+5)`);
+    const trophyHtml = trophyBits.length ? ` · ${trophyBits.join(' · ')}` : '';
     return `<div class="leaderboard-row ${rankClass} ${mine}">
       <div class="rank-num">${i+1}</div>
-      <div class="player-name">${escapeHtml(r.name)}<small>${r.predicted} predicted</small></div>
+      <div class="player-name">${escapeHtml(r.name)}<small>${r.predicted} predicted${trophyHtml}</small></div>
       <div class="stat-cell">${r.exact}</div>
       <div class="stat-cell">${r.bonusPts}</div>
       <div class="pts-cell">${r.pts}</div>
@@ -1933,6 +2074,22 @@ function renderPredictions() {
   } else if (isTestGw(selectedGw) && isTestReset(selectedGw)) {
     banner.innerHTML = `<div class="test-banner">🧪 Gameweek 1 was the test run. Its points no longer count. The real competition started at Gameweek 2.</div>`;
   } else { banner.innerHTML = ''; }
+
+  // Perfect Gameweek achievement - shown once this gameweek is fully complete
+  // (isGwComplete) and only for the tier the current user actually hit, so it
+  // never fires early and is never just a silent number added to the totals.
+  // Test gameweeks don't get this banner, same as they don't count towards it.
+  const perfectBanner = document.getElementById('predPerfectBanner');
+  const myTier = (!isTestGw(selectedGw) && isGwComplete(selectedGw))
+    ? ((calcPlayerStats(currentUser.name).perGw[selectedGw] || {}).perfectTier)
+    : null;
+  if (myTier === 'exact') {
+    perfectBanner.innerHTML = `<div class="perfect-banner">💯 <strong>Perfect Gameweek!</strong> You called every result exactly right this gameweek. +10 bonus points.</div>`;
+  } else if (myTier === 'correct') {
+    perfectBanner.innerHTML = `<div class="perfect-banner">💯 <strong>Perfect Gameweek!</strong> You got every match's result right this gameweek (not every scoreline exact, but every outcome). +5 bonus points.</div>`;
+  } else {
+    perfectBanner.innerHTML = '';
+  }
 
   const isTest = isTestGw(selectedGw);
   const remaining = bankersRemaining(currentUser.name);
