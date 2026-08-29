@@ -1134,7 +1134,7 @@
           <span class="bonus-line">🤝 <b>Underdog Draw</b> +1, a severe underdog draws and you called it</span>
           <span class="bonus-line">💯 <b>Perfect Gameweek</b> +5 (all results) / +10 (all exact) - only awarded once every match that gameweek has a final result</span>
           <span class="bonus-line">★ <b>Banker</b>, doubles one nominated pick's points, 8 uses per season</span>
-          <span class="bonus-line">Predictions lock 19:00 SG/KL every Saturday for that whole gameweek (Gameweek 1 is the exception - each match locks 30 min before its own kick-off instead).</span>
+          <span class="bonus-line">Predictions lock 19:00 SG/KL every Saturday for that whole gameweek.</span>
         </div>
       </div>
       <div class="gw-picker" id="gwPicker"></div>
@@ -1567,6 +1567,18 @@ function defaultGw() {
   const open = gws.find(gw => !isGwLocked(gw));
   return open !== undefined ? open : gws[gws.length-1];
 }
+// The gameweek "in play" - the one to headline on the dashboard - is the
+// most recent one whose OWN deadline has passed (kicked off, being played
+// out), one step behind defaultGw() (the gameweek currently open for picks,
+// before a ball's been kicked). Falls back to the earliest gameweek if none
+// has locked yet, so the card never jumps ahead of anything that's actually
+// happened. isGwLocked already handles GW1's per-match deadline scheme
+// correctly (locked only once its LAST match has passed), so no special
+// case is needed here.
+function gwInPlay() {
+  const locked = allGws().filter(isGwLocked);
+  return locked.length ? locked[locked.length - 1] : allGws()[0];
+}
 
 // ─── UPSET DETECTION ──────────────────────────────────────────────────────────
 function computeLiveTable(beforeGw) {
@@ -1674,6 +1686,17 @@ function isGwComplete(gw) {
   if (!matches.length) return false;
   const db = getDB();
   return matches.every(m => db.results && db.results[m.id]);
+}
+// How many of the CURRENT open gameweek's shortlisted matches this player
+// has predicted, out of how many count that gameweek (a postponed match
+// drops out of both the numerator and denominator, same as everywhere else
+// gwCountingMatches is used). Deliberately scoped to one gameweek rather
+// than a season-long total, so the leaderboard doubles as an at-a-glance
+// "who still hasn't picked this week" view.
+function gwPredictedCount(playerName, gw) {
+  const db = getDB();
+  const preds = (db.predictions && db.predictions[playerName]) || {};
+  return gwCountingMatches(gw).filter(m => preds[m.id]).length;
 }
 
 function calcPlayerStats(playerKey) {
@@ -2017,12 +2040,16 @@ function renderLeaderboard() {
   const db = getDB();
   const players = Object.entries(db.players || {});
   document.getElementById('statPlayers').textContent = players.length;
-  document.getElementById('statGw').textContent = 'GW' + defaultGw();
+  document.getElementById('statGw').textContent = 'GW' + gwInPlay();
   document.getElementById('statCompleted').textContent = Object.keys(db.results||{}).length;
 
   const statsByName = {};
   players.forEach(([key, p]) => { statsByName[p.name] = calcPlayerStats(p.name); });
   const gwWins = calcGwWinners(statsByName);
+  // "Predicted" on each row is scoped to whichever gameweek is currently
+  // open for picks, not a season total - see gwPredictedCount above.
+  const curGw = defaultGw();
+  const curGwTotal = gwCountingMatches(curGw).length;
   const rows = players.map(([key, p]) => {
     const stats = statsByName[p.name];
     // Perfect Gameweek tally for the "obviously visible" achievement badge below -
@@ -2030,7 +2057,8 @@ function renderLeaderboard() {
     const realGws = Object.entries(stats.perGw || {}).filter(([gw]) => !isTestGw(Number(gw)));
     const exactGws = realGws.filter(([,g]) => g.perfectTier === 'exact').length;
     const correctGws = realGws.filter(([,g]) => g.perfectTier === 'correct').length;
-    return { name: p.name, ...stats, gwWins: gwWins[p.name] || 0, exactGws, correctGws };
+    const curGwPredicted = gwPredictedCount(p.name, curGw);
+    return { name: p.name, ...stats, gwWins: gwWins[p.name] || 0, exactGws, correctGws, curGwPredicted };
   }).sort((a,b) => b.pts - a.pts || b.exact - a.exact || a.name.localeCompare(b.name));
 
   const me = rows.find(r => r.name === currentUser.name);
@@ -2053,7 +2081,7 @@ function renderLeaderboard() {
     const trophyHtml = trophyBits.length ? ` · ${trophyBits.join(' · ')}` : '';
     return `<div class="leaderboard-row ${rankClass} ${mine}">
       <div class="rank-num">${i+1}</div>
-      <div class="player-name">${escapeHtml(r.name)}<small>${r.predicted} predicted${trophyHtml}</small></div>
+      <div class="player-name">${escapeHtml(r.name)}<small>${r.curGwPredicted}/${curGwTotal} predicted for GW${curGw}${trophyHtml}</small></div>
       <div class="stat-cell">${r.exact}</div>
       <div class="stat-cell">${r.bonusPts}</div>
       <div class="pts-cell">${r.pts}</div>
