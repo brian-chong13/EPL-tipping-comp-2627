@@ -960,6 +960,8 @@
   .pick-score { font-family: 'DM Mono', monospace; color: var(--text); font-weight: 500; }
   .pick-pts { font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; margin-left: auto; }
 
+  .chat-star { display: none; color: var(--accent3); margin-left: 6px; font-size: 12px; }
+  .chat-star.on { display: inline; }
   /* CHAT BOARD */
   .chat-compose { display: flex; gap: 10px; margin-bottom: 16px; align-items: flex-start; }
   .chat-textarea {
@@ -1099,7 +1101,7 @@
       <div class="nav-tab active" onclick="showPage('leaderboard')">Leaderboard</div>
       <div class="nav-tab" onclick="showPage('predictions')">My Predictions</div>
       <div class="nav-tab" onclick="showPage('schedule')">Schedule</div>
-      <div class="nav-tab" onclick="showPage('chat')">Chat</div>
+      <div class="nav-tab" onclick="showPage('chat')">Chat<span class="chat-star" id="chatStar" title="New messages">&#9733;</span></div>
       <div class="nav-tab" id="adminNavTab" style="display:none" onclick="showPage('admin')">&#9733; Admin</div>
     </div>
   </nav>
@@ -1276,7 +1278,6 @@ const PROXY_RANKING_2026 = [
   'Nottingham Forest','Tottenham Hotspur','Coventry City','Hull City','Ipswich Town'
 ];
 const UPSET_GAP = 10;              // table-place gap that counts as a "severe" underdog
-const LIVE_TABLE_MIN_MATCHES = 4;  // avg matches played per club before trusting the live table over the proxy
 
 // ─── GAMEWEEKS ──────────────────────────────────────────────────────────────
 // deadlineUTC: the single round-wide prediction lock for that gameweek —
@@ -1404,7 +1405,7 @@ const MATCHES = (() => {
     [8,'Aston Villa','Manchester City','2026-10-24T11:30:00Z',null],
     [8,'Arsenal','Everton','2026-10-24T14:00:00Z',null],
     [8,'Coventry City','Fulham','2026-10-24T14:00:00Z',null],
-    [8,'Liverpool','Brighton & Hove Albion','2026-10-24T14:00:00Z',null],
+    [8,'Liverpool','Brighton & Hove Albion','2026-10-25T14:00:00Z',null],
     [8,'Chelsea','Tottenham Hotspur','2026-10-24T16:30:00Z',null],
     [8,'Crystal Palace','Newcastle United','2026-10-25T14:00:00Z',null],
     [8,'Hull City','Brentford','2026-10-25T14:00:00Z',null],
@@ -1418,7 +1419,7 @@ const MATCHES = (() => {
     [9,'Hull City','Ipswich Town','2026-10-31T15:00:00Z',null],
     [9,'Manchester City','Brighton & Hove Albion','2026-10-31T15:00:00Z',null],
     [9,'Tottenham Hotspur','Crystal Palace','2026-10-31T17:30:00Z',null],
-    [9,'Aston Villa','Fulham','2026-11-01T14:00:00Z',null],
+    [9,'Aston Villa','Fulham','2026-10-31T20:00:00Z',null],
     [9,'Liverpool','Arsenal','2026-11-01T16:30:00Z',null],
     [9,'Newcastle United','Everton','2026-11-02T20:00:00Z',null],
   ];
@@ -1558,6 +1559,15 @@ function isGwOpen(gw) {
   return isGwLocked(gws[idx-1]);
 }
 function openGws() { return allGws().filter(isGwOpen); }
+// The gameweek still "active": the earliest open, non-test gameweek that has not
+// had every counting match resulted yet. Moves on only once all of them are in
+// (postponed matches don't count, see gwCountingMatches). Used as the default
+// gameweek on My Predictions, Schedule and Admin.
+function activeGw() {
+  const gws = openGws().filter(gw => !isTestGw(gw));
+  const live = gws.find(gw => !isGwComplete(gw));
+  return live !== undefined ? live : (gws.length ? gws[gws.length-1] : defaultGw());
+}
 function defaultAdminGw() {
   const notYetOpen = allGws().find(gw => !isGwOpen(gw));
   return notYetOpen !== undefined ? notYetOpen : defaultGw();
@@ -1602,23 +1612,22 @@ function computeLiveTable(beforeGw) {
   });
   return stats;
 }
+// Ranking used for underdog detection. Only the shortlisted matches ever get a
+// result entered, so a true live table can't be built from app data. Instead:
+// RANKING_SNAPSHOTS holds the REAL Premier League table order (1 = top) taken
+// after the previous gameweek finished and before this one's deadline. A
+// gameweek uses the latest snapshot at or before it, else the proxy above.
+// Snapshots are frozen once added, so a flag players have already seen never
+// changes. GW2-5 have no snapshot on purpose: they stay on the proxy so nobody's
+// points move retroactively. Add the next one each week once the previous
+// gameweek has finished (e.g. 6: [ 'Arsenal', 'Manchester City', ... 20 clubs ]).
+const RANKING_SNAPSHOTS = {
+};
 function getRankingForGw(gw) {
-  const live = computeLiveTable(gw);
-  const clubCount = Object.keys(CLUBS).length;
-  const avgPlayed = Object.values(live).reduce((s,t)=>s+t.played,0) / clubCount;
+  const keys = Object.keys(RANKING_SNAPSHOTS).map(Number).filter(k => k <= gw).sort((a,b) => b - a);
+  const order = keys.length ? RANKING_SNAPSHOTS[keys[0]] : PROXY_RANKING_2026;
   const table = {};
-  if (avgPlayed >= LIVE_TABLE_MIN_MATCHES) {
-    const ranked = Object.entries(live).sort((a,b) => {
-      const [,sa]=a, [,sb]=b;
-      if (sb.pts !== sa.pts) return sb.pts - sa.pts;
-      const gdA=sa.gf-sa.ga, gdB=sb.gf-sb.ga;
-      if (gdB !== gdA) return gdB - gdA;
-      return sb.gf - sa.gf;
-    });
-    ranked.forEach(([club], i) => { table[club] = { rank: i+1 }; });
-  } else {
-    PROXY_RANKING_2026.forEach((club, i) => { table[club] = { rank: i+1 }; });
-  }
+  order.forEach((club, i) => { table[club] = { rank: i+1 }; });
   return table;
 }
 function rankOf(club, gw) {
@@ -1987,6 +1996,8 @@ function bootAppScreen() {
   document.getElementById('adminNavTab').style.display = isAdmin() ? 'block' : 'none';
   showPage('leaderboard');
   setInterval(tickCountdowns, 1000);
+  setInterval(pollChat, 5 * 60 * 1000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) pollChat(); });
 }
 window.addEventListener('DOMContentLoaded', bootApp);
 
@@ -1999,10 +2010,11 @@ function showPage(page) {
   const tabs = document.querySelectorAll('.nav-tab');
   if (tabs[idx]) tabs[idx].classList.add('active');
   if (page === 'leaderboard') renderLeaderboard();
-  if (page === 'predictions') renderPredictions();
-  if (page === 'schedule') renderSchedule();
+  if (page === 'predictions') { selectedGw = activeGw(); renderPredictions(); }
+  if (page === 'schedule') { schedSelectedGw = activeGw(); renderSchedule(); }
   if (page === 'chat') renderChat();
-  if (page === 'admin') renderAdmin();
+  if (page === 'admin') { adminSelectedGw = activeGw(); renderAdmin(); }
+  updateChatStar();
 }
 async function refreshLeaderboard() {
   const btn = document.getElementById('refreshBtn');
@@ -2065,9 +2077,7 @@ function renderLeaderboard() {
   document.getElementById('statYourPts').textContent = me ? me.pts : 0;
 
   const banner = document.getElementById('lbTestBanner');
-  banner.innerHTML = (GAMEWEEKS[1] && !isTestReset(1))
-    ? `<div class="test-banner">🧪 <strong>Gameweek 1 is a test run.</strong> These standings include it for now. Everything resets to zero before Gameweek 2's deadline (Sat 29 Aug, 18:00 SG/KL).</div>`
-    : (GAMEWEEKS[1] ? `<div class="test-banner">🧪 Gameweek 1 was a test run. Its points no longer count. The real competition runs from Gameweek 2.</div>` : '');
+  banner.innerHTML = '';
 
   const body = document.getElementById('leaderboardBody');
   body.innerHTML = rows.map((r, i) => {
@@ -2338,8 +2348,36 @@ function renderSchedule() {
 function fmtChatTime(ts) {
   return new Date(ts).toLocaleString('en-GB', { timeZone:'Asia/Singapore', day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }) + ' SG/KL';
 }
+// New-message star on the Chat tab. Last-seen time is kept per player on this
+// device; a first visit on a device starts from the latest message, so old
+// history isn't flagged as new.
+function chatSeenKey() { return 'epl2627_chat_seen_' + (currentUser ? currentUser.key : ''); }
+function getChatSeen() { try { const v = localStorage.getItem(chatSeenKey()); return v === null ? null : Number(v); } catch { return null; } }
+function setChatSeen(ts) { try { localStorage.setItem(chatSeenKey(), String(ts)); } catch {} }
+function latestChatTs() { return (getDB().chat || []).reduce((m, x) => Math.max(m, x.ts || 0), 0); }
+function updateChatStar() {
+  const el = document.getElementById('chatStar');
+  if (!el || !currentUser) return;
+  let seen = getChatSeen();
+  if (seen === null) { seen = latestChatTs(); setChatSeen(seen); }
+  const unseen = (getDB().chat || []).some(m => m.ts > seen && m.author !== currentUser.name);
+  const onChat = document.getElementById('page-chat').classList.contains('active');
+  el.classList.toggle('on', unseen && !onChat);
+}
+// Light background check for new posts: every 5 minutes while the tab is
+// visible, and whenever the tab comes back into view. Only the chat array is
+// merged in, so nothing else on screen is disturbed.
+async function pollChat() {
+  if (!currentUser || document.hidden) return;
+  try {
+    const fresh = await fetchDB();
+    if (fresh && Array.isArray(fresh.chat) && _db) _db.chat = fresh.chat; else return;
+  } catch { return; }
+  if (document.getElementById('page-chat').classList.contains('active')) renderChat(); else updateChatStar();
+}
 function renderChat() {
   const db = getDB();
+  setChatSeen(latestChatTs()); updateChatStar();
   const msgs = (db.chat || []).slice().sort((a,b) => b.ts - a.ts);
   document.getElementById('chatList').innerHTML = msgs.length ? msgs.map(msg => {
     const mine = msg.author === currentUser.name;
