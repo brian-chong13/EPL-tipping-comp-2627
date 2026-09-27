@@ -1614,15 +1614,43 @@ function computeLiveTable(beforeGw) {
 }
 // Ranking used for underdog detection. Only the shortlisted matches ever get a
 // result entered, so a true live table can't be built from app data. Instead:
-// RANKING_SNAPSHOTS holds the REAL Premier League table order (1 = top) taken
-// after the previous gameweek finished and before this one's deadline. A
-// gameweek uses the latest snapshot at or before it, else the proxy above.
-// Snapshots are frozen once added, so a flag players have already seen never
-// changes. GW2-5 have no snapshot on purpose: they stay on the proxy so nobody's
-// points move retroactively. Add the next one each week once the previous
-// gameweek has finished (e.g. 6: [ 'Arsenal', 'Manchester City', ... 20 clubs ]).
-const RANKING_SNAPSHOTS = {
-};
+// RANKING_SNAPSHOTS holds the REAL Premier League table order (1 = top), one
+// entry per gameweek. A gameweek uses the latest snapshot at or before it,
+// else the proxy above. GW2-5 have no snapshot on purpose: they stay on the
+// proxy so nobody's points move retroactively.
+//
+// Populated automatically by a GitHub Action (scripts/snapshot-table.mjs)
+// that writes snapshots.json to the repo once a gameweek fully finishes and
+// the next one hasn't kicked off - see loadSnapshots() below, called from
+// bootApp() before the first render. A gameweek's entry is written once and
+// never touched again, so a flag a player has already seen never changes,
+// and repeated fetches during the week always return the same value. If the
+// fetch fails for any reason (offline, repo renamed), this stays empty and
+// everything silently falls back to the proxy table, same as before this was
+// automated - nothing here needs to be hand-edited any more.
+let RANKING_SNAPSHOTS = {};
+const SNAPSHOTS_URL = 'https://raw.githubusercontent.com/brian-chong13/EPL-tipping-comp-2627/main/snapshots.json';
+const _SNAP_CACHE_KEY = 'epl2627_snapshots_cache';
+const _SNAP_CACHE_TTL = 15 * 60 * 1000; // same window as the JSONBin cache - a snapshot
+// only ever changes once a week (see above), so this just avoids hammering GitHub
+// on every page load while still picking up a new one within 15 minutes of it landing.
+async function loadSnapshots() {
+  try {
+    const raw = localStorage.getItem(_SNAP_CACHE_KEY);
+    if (raw) {
+      const { ts, data } = JSON.parse(raw);
+      if (Date.now() - ts < _SNAP_CACHE_TTL) { RANKING_SNAPSHOTS = data; return; }
+    }
+  } catch {}
+  try {
+    const res = await fetch(SNAPSHOTS_URL, { cache: 'no-store' });
+    if (res.ok) {
+      const data = await res.json();
+      RANKING_SNAPSHOTS = data;
+      try { localStorage.setItem(_SNAP_CACHE_KEY, JSON.stringify({ ts: Date.now(), data })); } catch {}
+    }
+  } catch {} // offline or repo unreachable - keep whatever we already had (cache or {})
+}
 function getRankingForGw(gw) {
   const keys = Object.keys(RANKING_SNAPSHOTS).map(Number).filter(k => k <= gw).sort((a,b) => b - a);
   const order = keys.length ? RANKING_SNAPSHOTS[keys[0]] : PROXY_RANKING_2026;
@@ -1976,7 +2004,7 @@ async function bootApp() {
     }
     show('loadingScreen', false); show('setupScreen', true); return;
   }
-  await loadDB();
+  await Promise.all([loadDB(), loadSnapshots()]);
   const sess = getSession();
   if (sess) {
     const db = getDB();
