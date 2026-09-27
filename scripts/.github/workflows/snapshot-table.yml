@@ -1,0 +1,38 @@
+name: Snapshot Premier League table
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'   # every 6 hours, it only acts when a gameweek has just finished
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Force a gameweek number (leave blank for automatic)'
+        required: false
+      dry_run:
+        description: 'Dry run (print only, do not save)'
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Build snapshot
+        run: node scripts/snapshot-table.mjs
+        env:
+          FOOTBALL_DATA_KEY: ${{ secrets.FOOTBALL_DATA_KEY }}
+          FORCE_TARGET: ${{ github.event.inputs.target }}
+          DRY_RUN: ${{ github.event.inputs.dry_run }}
+      - name: Commit if changed
+        run: |
+          git config user.name "table-bot"
+          git config user.email "table-bot@users.noreply.github.com"
+          git add snapshots.json || true
+          git diff --cached --quiet || (git commit -m "Add Premier League table snapshot" && git push)
