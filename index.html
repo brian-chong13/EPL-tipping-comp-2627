@@ -737,6 +737,7 @@
   }
   .player-admin-row {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 10px;
     padding: 10px 12px;
@@ -1548,6 +1549,18 @@ function gwDeadlineMs(gw) {
 }
 function isGwLocked(gw) { return Date.now() >= gwDeadlineMs(gw); }
 function isLocked(m) { return Date.now() >= matchDeadlineMs(m); }
+// Admin late-unlock: db.lateUnlocks[playerName][matchId] = true lets ONE player
+// predict a match after the round deadline, but only until that match's own kick-off.
+function kickoffMs(m) { return new Date(effectiveMatch(m).utc).getTime(); }
+function hasLateUnlock(player, m) {
+  const lu = getDB().lateUnlocks;
+  return !!(lu && lu[player] && lu[player][m.id]) && Date.now() < kickoffMs(m);
+}
+function isLockedFor(m, player) { return isLocked(m) && !hasLateUnlock(player, m); }
+function anyLateUnlockOpen(m) {
+  const lu = getDB().lateUnlocks || {};
+  return Date.now() < kickoffMs(m) && Object.values(lu).some(x => x && x[m.id]);
+}
 function allGws() { return [...new Set(MATCHES.map(m=>m.gw))].sort((a,b)=>a-b); }
 // A gameweek "opens" - becomes visible/predictable to players, and its
 // shortlist freezes - the instant the PREVIOUS gameweek's deadline passes.
@@ -2189,7 +2202,9 @@ function renderPredictions() {
 function renderMatchCard(m, pred, result, showPredInput) {
   const postponed = isPostponed(m);
   const excludedFriday = m.reason === 'friday' && !m.inComp;
-  const locked = isLocked(m);
+  const rawLocked = isLocked(m);
+  const locked = isLockedFor(m, currentUser.name);
+  const lateOpen = rawLocked && !locked;
   const gwTest = isTestGw(m.gw);
 
   let statusClass = 'open', badgeText = 'Open', badgeClass = 'badge-open';
@@ -2232,7 +2247,7 @@ function renderMatchCard(m, pred, result, showPredInput) {
       const bankerLockedElsewhere = !isBanker && !!(currentBankerMatch && isLocked(currentBankerMatch));
       const bankerDisabled = !isBanker && (bankerLockedElsewhere || (!gwTest && remaining <= 0));
       const bankerTitle = bankerLockedElsewhere ? 'Your banker is already locked in on another match' : (bankerDisabled ? 'No bankers remaining' : '');
-      predSection = `<div class="pred-row">
+      predSection = `${lateOpen ? '<div style="font-size:11px;color:var(--accent3);margin-top:6px;">Late pick unlocked by admin, closes at kick-off</div>' : ''}<div class="pred-row">
         <span class="pred-label">Predict:</span>
         <div class="score-input-group">
           <input class="score-input" type="number" min="0" max="99" value="${ph}" id="ph_${m.id}" onchange="autoSave('${m.id}')">
@@ -2252,7 +2267,7 @@ function renderMatchCard(m, pred, result, showPredInput) {
     predSection = `<div class="pred-locked-text">Not part of this gameweek's shortlist.</div>`;
   }
 
-  const picksSection = showPredInput && locked && m.inComp && !postponed ? renderPicksSection(m) : '';
+  const picksSection = showPredInput && rawLocked && !anyLateUnlockOpen(m) && m.inComp && !postponed ? renderPicksSection(m) : '';
   const tz = utcToZones(m.utc);
   const homeClub = CLUBS[m.home] || {}, awayClub = CLUBS[m.away] || {};
 
@@ -2314,7 +2329,7 @@ async function savePred(matchId) {
   const home = parseInt(hEl.value), away = parseInt(aEl.value);
   if (isNaN(home) || isNaN(away) || home < 0 || away < 0) { showToast('Enter valid scores (0-99)', 'error'); return; }
   const match = MATCHES.find(m => m.id === matchId);
-  if (!match || isLocked(match)) { showToast('This gameweek is locked.', 'error'); return; }
+  if (!match || isLockedFor(match, currentUser.name)) { showToast('This gameweek is locked.', 'error'); return; }
   const playerKey = currentUser.name;
   try {
     await safeMutate(db => {
@@ -2343,7 +2358,7 @@ async function toggleBanker(matchId, gw) {
     const currentMatch = MATCHES.find(m => m.id === current);
     if (currentMatch && isLocked(currentMatch)) { showToast('Your banker is locked in, that match has already kicked off.', 'error'); return; }
   }
-  if (!turningOff && match && isLocked(match)) { showToast('This match is locked.', 'error'); return; }
+  if (!turningOff && match && isLockedFor(match, currentUser.name)) { showToast('This match is locked.', 'error'); return; }
   if (!turningOff && !isTestGw(gw) && bankersRemaining(playerKey) <= 0) { showToast('No bankers left this season', 'error'); return; }
   try {
     await safeMutate(db => {
@@ -2623,10 +2638,33 @@ function renderAdminPlayers() {
     return `<div class="player-admin-row">
       <div class="player-admin-name">${escapeHtml(p.name)} ${p.isAdmin?'<span class="admin-badge-label">ADMIN</span>':''}</div>
       <div class="player-admin-meta">${used}/8 bankers used</div>
+      ${lateUnlockHtml(p.name)}
       ${!p.isAdmin ? `<button class="btn-warning" onclick="resetPlayer('${key}','${escapeHtml(p.name)}')">Reset PIN</button>` : ''}
       ${!p.isAdmin ? `<button class="btn-danger" onclick="removePlayer('${key}','${escapeHtml(p.name)}')">Remove</button>` : ''}
     </div>`;
   }).join('') || '<div style="color:var(--text3);font-size:13px;">No players yet.</div>';
+}
+function lateUnlockHtml(playerName) {
+  const gw = activeGw();
+  const ms = MATCHES.filter(m => m.gw === gw).map(effectiveMatch)
+    .filter(m => m.inComp && !isPostponed(m) && isLocked(m) && Date.now() < new Date(m.utc).getTime())
+    .sort((a,b)=>new Date(a.utc)-new Date(b.utc));
+  if (!ms.length) return '';
+  const lu = (getDB().lateUnlocks || {})[playerName] || {};
+  return `<div style="width:100%;margin-top:6px;font-size:11px;color:var(--text3);">Late picks (GW${gw}, until kick-off):
+    ${ms.map(m => `<button class="${lu[m.id]?'btn-recalc':'btn-warning'}" style="margin:2px 4px 2px 0;" onclick="toggleLateUnlock('${escapeHtml(playerName).replace(/'/g,"\\'")}','${m.id}')">${lu[m.id]?'Unlocked':'Unlock'}: ${escapeHtml(m.home)} v ${escapeHtml(m.away)}</button>`).join('')}</div>`;
+}
+async function toggleLateUnlock(playerName, matchId) {
+  try {
+    await safeMutate(db => {
+      if (!db.lateUnlocks) db.lateUnlocks = {};
+      if (!db.lateUnlocks[playerName]) db.lateUnlocks[playerName] = {};
+      if (db.lateUnlocks[playerName][matchId]) delete db.lateUnlocks[playerName][matchId];
+      else db.lateUnlocks[playerName][matchId] = true;
+    });
+    showToast('Late-pick access updated', 'success');
+    renderAdminPlayers();
+  } catch(e) { showToast('Failed to update', 'error'); }
 }
 function resetPlayer(key, name) {
   openModal('Reset PIN', `Reset ${name}'s PIN to 0000? Tell them the new PIN so they can sign in.`, async () => {
