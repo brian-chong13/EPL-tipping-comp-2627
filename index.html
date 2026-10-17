@@ -1300,10 +1300,13 @@ const GAMEWEEKS = {
   7: { deadlineUTC: '2026-10-17T11:00:00Z' },
   8: { deadlineUTC: '2026-10-24T11:00:00Z' },
   9: { deadlineUTC: '2026-10-31T11:00:00Z' },
+  10: { deadlineUTC: '2026-11-07T11:00:00Z' },
+  11: { deadlineUTC: '2026-11-21T11:00:00Z' },
+  12: { deadlineUTC: '2026-11-28T11:00:00Z' },
 };
 
 // ─── MATCHES ────────────────────────────────────────────────────────────────
-// Real fixtures for gameweeks 1-9 (premierleague.com / Sky Sports / TNT Sports,
+// Real fixtures for gameweeks 1-12 (premierleague.com / Sky Sports / TNT Sports,
 // GW1-3 confirmed 21 Aug 2026, GW4-9 confirmed and added 29 Aug 2026). App
 // gameweek numbers match real Premier League matchweek numbers exactly, no
 // offset (verified against the season's own MW1-9 date ranges before adding
@@ -1423,6 +1426,39 @@ const MATCHES = (() => {
     [9,'Aston Villa','Fulham','2026-10-31T20:00:00Z',null],
     [9,'Liverpool','Arsenal','2026-11-01T16:30:00Z',null],
     [9,'Newcastle United','Everton','2026-11-02T20:00:00Z',null],
+    // GW10 — Fri 6 to Sun 8 Nov (confirmed by premierleague.com 21 Sep 2026)
+    [10,'Everton','Coventry City','2026-11-06T20:00:00Z','friday'],
+    [10,'Leeds United','Tottenham Hotspur','2026-11-07T12:30:00Z',null],
+    [10,'Arsenal','Hull City','2026-11-07T15:00:00Z',null],
+    [10,'Fulham','Newcastle United','2026-11-07T15:00:00Z',null],
+    [10,'Nottingham Forest','Manchester City','2026-11-07T17:30:00Z',null],
+    [10,'Brighton & Hove Albion','Brentford','2026-11-08T14:00:00Z',null],
+    [10,'Crystal Palace','Liverpool','2026-11-08T14:00:00Z',null],
+    [10,'Ipswich Town','AFC Bournemouth','2026-11-08T14:00:00Z',null],
+    [10,'Sunderland','Chelsea','2026-11-08T14:00:00Z',null],
+    [10,'Manchester United','Aston Villa','2026-11-08T16:30:00Z',null],
+    // GW11 — Sat 21 to Mon 23 Nov, no Friday fixture
+    [11,'Manchester City','Fulham','2026-11-21T12:30:00Z',null],
+    [11,'AFC Bournemouth','Nottingham Forest','2026-11-21T15:00:00Z',null],
+    [11,'Aston Villa','Sunderland','2026-11-21T15:00:00Z',null],
+    [11,'Chelsea','Leeds United','2026-11-21T15:00:00Z',null],
+    [11,'Coventry City','Crystal Palace','2026-11-21T15:00:00Z',null],
+    [11,'Tottenham Hotspur','Ipswich Town','2026-11-21T15:00:00Z',null],
+    [11,'Newcastle United','Arsenal','2026-11-21T17:30:00Z',null],
+    [11,'Hull City','Brighton & Hove Albion','2026-11-22T14:00:00Z',null],
+    [11,'Liverpool','Manchester United','2026-11-22T16:30:00Z',null],
+    [11,'Brentford','Everton','2026-11-23T20:00:00Z',null],
+    // GW12 — Fri 27 to Sun 29 Nov
+    [12,'Nottingham Forest','Chelsea','2026-11-27T20:00:00Z','friday'],
+    [12,'Leeds United','Coventry City','2026-11-28T15:00:00Z',null],
+    [12,'Manchester United','Brentford','2026-11-28T15:00:00Z',null],
+    [12,'Ipswich Town','Aston Villa','2026-11-28T17:30:00Z',null],
+    [12,'Everton','Liverpool','2026-11-29T12:00:00Z',null],
+    [12,'Brighton & Hove Albion','Newcastle United','2026-11-29T14:05:00Z',null],
+    [12,'Crystal Palace','Hull City','2026-11-29T14:05:00Z',null],
+    [12,'Fulham','AFC Bournemouth','2026-11-29T14:05:00Z',null],
+    [12,'Sunderland','Tottenham Hotspur','2026-11-29T14:05:00Z',null],
+    [12,'Arsenal','Manchester City','2026-11-29T16:30:00Z',null],
   ];
   const counters = {};
   return raw.map(([gw,home,away,utc,reason]) => {
