@@ -1314,10 +1314,14 @@ const GAMEWEEKS = {
   18: { deadlineUTC: '2026-12-29T11:00:00Z' },
   19: { deadlineUTC: '2027-01-02T11:00:00Z' },
   20: { deadlineUTC: '2027-01-05T11:00:00Z' },
+  // GW21-23 added 20 Nov 2026 (19:00 SG/KL Saturday, earliest kick-off 12:30 UTC Sat)
+  21: { deadlineUTC: '2027-01-16T11:00:00Z' },
+  22: { deadlineUTC: '2027-01-23T11:00:00Z' },
+  23: { deadlineUTC: '2027-01-30T11:00:00Z' },
 };
 
 // ─── MATCHES ────────────────────────────────────────────────────────────────
-// Real fixtures for gameweeks 1-20 (premierleague.com / Sky Sports / TNT Sports,
+// Real fixtures for gameweeks 1-23 (premierleague.com / Sky Sports / TNT Sports,
 // GW1-3 confirmed 21 Aug 2026, GW4-9 confirmed and added 29 Aug 2026). App
 // gameweek numbers match real Premier League matchweek numbers exactly, no
 // offset (verified against the season's own MW1-9 date ranges before adding
@@ -1560,6 +1564,39 @@ const MATCHES = (() => {
     [20,'Ipswich Town','Coventry City','2027-01-06T19:30:00Z',null],
     [20,'Leeds United','Manchester City','2027-01-06T20:15:00Z',null],
     [20,'Manchester United','Newcastle United','2027-01-07T20:00:00Z',null],
+    // GW21 - Sat 16 - Mon 18 Jan 2027, PL amendments article 19 Nov 2026
+    [21,'Coventry City','Everton','2027-01-16T12:30:00Z',null],
+    [21,'Chelsea','Sunderland','2027-01-16T15:00:00Z',null],
+    [21,'Hull City','Arsenal','2027-01-16T15:00:00Z',null],
+    [21,'Liverpool','Crystal Palace','2027-01-16T15:00:00Z',null],
+    [21,'Manchester City','Nottingham Forest','2027-01-16T15:00:00Z',null],
+    [21,'Newcastle United','Fulham','2027-01-16T15:00:00Z',null],
+    [21,'Aston Villa','Manchester United','2027-01-16T17:30:00Z',null],
+    [21,'AFC Bournemouth','Ipswich Town','2027-01-17T14:00:00Z',null],
+    [21,'Tottenham Hotspur','Leeds United','2027-01-17T16:30:00Z',null],
+    [21,'Brentford','Brighton & Hove Albion','2027-01-18T20:00:00Z',null],
+    // GW22 - Sat 23 - Mon 25 Jan 2027 (Sun 24 Jan: Palace, Forest, Sunderland moved for UEFA), PL amendments article 19 Nov 2026
+    [22,'Fulham','Aston Villa','2027-01-23T15:00:00Z',null],
+    [22,'Ipswich Town','Hull City','2027-01-23T15:00:00Z',null],
+    [22,'Arsenal','Newcastle United','2027-01-23T17:30:00Z',null],
+    [22,'Brighton & Hove Albion','Manchester City','2027-01-23T20:00:00Z',null],
+    [22,'Crystal Palace','Tottenham Hotspur','2027-01-24T14:00:00Z',null],
+    [22,'Everton','Brentford','2027-01-24T14:00:00Z',null],
+    [22,'Nottingham Forest','AFC Bournemouth','2027-01-24T14:00:00Z',null],
+    [22,'Sunderland','Coventry City','2027-01-24T14:00:00Z',null],
+    [22,'Manchester United','Liverpool','2027-01-24T16:30:00Z',null],
+    [22,'Leeds United','Chelsea','2027-01-25T20:00:00Z',null],
+    // GW23 - Sat 30 Jan - Mon 1 Feb 2027 (Sun 31 Jan: Bournemouth, Hull, Spurs moved for UEFA), PL amendments article 19 Nov 2026
+    [23,'Liverpool','Everton','2027-01-30T12:30:00Z',null],
+    [23,'Aston Villa','Ipswich Town','2027-01-30T15:00:00Z',null],
+    [23,'Newcastle United','Brighton & Hove Albion','2027-01-30T15:00:00Z',null],
+    [23,'Chelsea','Nottingham Forest','2027-01-30T17:30:00Z',null],
+    [23,'AFC Bournemouth','Fulham','2027-01-31T14:00:00Z',null],
+    [23,'Coventry City','Leeds United','2027-01-31T14:00:00Z',null],
+    [23,'Hull City','Crystal Palace','2027-01-31T14:00:00Z',null],
+    [23,'Tottenham Hotspur','Sunderland','2027-01-31T14:00:00Z',null],
+    [23,'Manchester City','Arsenal','2027-01-31T16:30:00Z',null],
+    [23,'Brentford','Manchester United','2027-02-01T20:00:00Z',null],
   ];
   const counters = {};
   return raw.map(([gw,home,away,utc,reason]) => {
